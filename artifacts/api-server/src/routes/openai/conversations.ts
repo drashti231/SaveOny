@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { conversations, messages } from "@workspace/db";
+import { conversations, messages, transactionsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import {
@@ -176,8 +176,39 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
       .where(eq(messages.conversationId, conversationId))
       .orderBy(messages.createdAt);
 
+    // Fetch all transactions to give the AI context
+    const allTxns = await db
+      .select()
+      .from(transactionsTable)
+      .orderBy(desc(transactionsTable.date));
+      
+    let totalIncome = 0;
+    let totalExpense = 0;
+    
+    // Create a simplified list of transactions for the prompt
+    const txnsContext = allTxns.map(t => {
+      const amt = parseFloat(t.amount);
+      if (t.isIncome) totalIncome += amt;
+      else totalExpense += amt;
+      return `${t.date}: ${t.merchant} (${t.category}) - ₹${amt} [${t.isIncome ? 'INCOME' : 'EXPENSE'}]`;
+    }).join("\n");
+    
+    const netWorth = totalIncome - totalExpense;
+
+    const dynamicSystemPrompt = `${FINANCIAL_SYSTEM_PROMPT}
+    
+=== USER'S ACTUAL FINANCIAL DATA ===
+Total Net Worth: ₹${netWorth}
+Total Income: ₹${totalIncome}
+Total Expense: ₹${totalExpense}
+
+Recent Transactions:
+${txnsContext || "No transactions yet."}
+====================================
+Use this exact data to provide personalized, highly specific advice. If they ask about overspending, look at the transactions above and point out specific merchants or categories.`;
+
     const chatMessages = [
-      { role: "system" as const, content: FINANCIAL_SYSTEM_PROMPT },
+      { role: "system" as const, content: dynamicSystemPrompt },
       ...history.map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,

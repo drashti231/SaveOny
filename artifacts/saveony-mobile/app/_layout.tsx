@@ -20,8 +20,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) {
   setBaseUrl(`https://${domain}`);
-} else if (process.env.EXPO_PUBLIC_API_URL) {
-  setBaseUrl(process.env.EXPO_PUBLIC_API_URL);
+} else {
+  // Hardcoding local IP to avoid Metro cache issues with .env
+  setBaseUrl("http://10.37.21.107:8080");
 }
 
 

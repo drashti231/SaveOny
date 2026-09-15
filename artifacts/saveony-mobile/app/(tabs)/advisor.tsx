@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import * as Speech from "expo-speech";
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -64,6 +65,7 @@ export default function AdvisorScreen() {
   const [streamBuffer, setStreamBuffer] = useState("");
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const flatListRef = useRef<FlatList>(null);
 
@@ -110,6 +112,7 @@ export default function AdvisorScreen() {
   const sendMessage = async (content: string) => {
     if (!content.trim() || streaming) return;
     setInput("");
+    Speech.stop();
 
     let cid = conversationId;
     if (!cid) {
@@ -148,26 +151,29 @@ export default function AdvisorScreen() {
               fullText += json.content;
               setStreamBuffer(fullText);
             }
-            if (json.done) {
-              setMessages((prev) => [
-                ...prev,
-                { id: Date.now().toString() + "a", role: "assistant", content: fullText },
-              ]);
-              setStreamBuffer("");
-            }
-          } catch {}
+              if (json.done) {
+                setMessages((prev) => [
+                  ...prev,
+                  { id: Date.now().toString() + "a", role: "assistant", content: fullText },
+                ]);
+                setStreamBuffer("");
+                if (voiceEnabled) {
+                  Speech.speak(fullText.replace(/[*#]/g, ''), { rate: 1.0 });
+                }
+              }
+            } catch {}
+          }
         }
+      } catch {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString() + "e", role: "assistant", content: "Sorry, something went wrong. Please try again." },
+        ]);
+        setStreamBuffer("");
+      } finally {
+        setStreaming(false);
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now().toString() + "e", role: "assistant", content: "Sorry, something went wrong. Please try again." },
-      ]);
-      setStreamBuffer("");
-    } finally {
-      setStreaming(false);
-    }
-  };
+    };
 
   const allMessages: ChatMessage[] = [
     ...messages,
@@ -234,12 +240,23 @@ export default function AdvisorScreen() {
             <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>Financial Advisor</Text>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={() => { loadConversations(); setShowHistory(true); }}
-          style={[styles.historyBtn, { borderColor: colors.border }]}
-        >
-          <Feather name="clock" size={15} color={colors.mutedForeground} />
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <TouchableOpacity
+            onPress={() => {
+              if (voiceEnabled) Speech.stop();
+              setVoiceEnabled(!voiceEnabled);
+            }}
+            style={[styles.historyBtn, { borderColor: colors.border }]}
+          >
+            <Feather name={voiceEnabled ? "volume-2" : "volume-x"} size={16} color={voiceEnabled ? colors.primary : colors.mutedForeground} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => { loadConversations(); setShowHistory(true); }}
+            style={[styles.historyBtn, { borderColor: colors.border }]}
+          >
+            <Feather name="clock" size={15} color={colors.mutedForeground} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <KeyboardAvoidingView
