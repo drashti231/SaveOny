@@ -221,18 +221,31 @@ Use this exact data to provide personalized, highly specific advice. If they ask
     res.setHeader("Connection", "keep-alive");
 
     let fullResponse = "";
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 8192,
-      messages: chatMessages,
-      stream: true,
-    });
 
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        fullResponse += content;
-        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+    if (process.env.AI_INTEGRATIONS_OPENAI_API_KEY === "dummy") {
+      // Mocked AI response based on the dynamic prompt data
+      const mockText = `Based on your recent transactions, your net worth is ₹${netWorth}. I noticed you spent ₹${totalExpense} recently. To save more this month, consider setting a strict limit on unnecessary shopping and dining out. According to the 50/30/20 rule, try to save at least ₹${(totalIncome || 10000) * 0.2} every month!`;
+      
+      const words = mockText.split(" ");
+      for (const word of words) {
+        fullResponse += word + " ";
+        res.write(`data: ${JSON.stringify({ content: word + " " })}\n\n`);
+        await new Promise((r) => setTimeout(r, 50)); // simulate typing delay
+      }
+    } else {
+      const stream = await openai.chat.completions.create({
+        model: "gpt-5.4",
+        max_completion_tokens: 8192,
+        messages: chatMessages,
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          fullResponse += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
       }
     }
 

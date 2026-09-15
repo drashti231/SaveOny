@@ -16,8 +16,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import * as Speech from "expo-speech";
+import * as Haptics from "expo-haptics";
+import EventSource from "react-native-sse";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+const BASE_URL = "http://10.37.21.107:8080";
 
 interface ChatMessage {
   id: string;
@@ -111,6 +113,7 @@ export default function AdvisorScreen() {
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || streaming) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setInput("");
     Speech.stop();
 
@@ -126,53 +129,54 @@ export default function AdvisorScreen() {
     setStreamBuffer("");
 
     try {
-      const res = await fetch(`${BASE_URL}/api/openai/conversations/${cid}/messages`, {
+      const es = new EventSource(`${BASE_URL}/api/openai/conversations/${cid}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
 
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buf = "";
       let fullText = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        const parts = buf.split("\n\n");
-        buf = parts.pop() ?? "";
-        for (const part of parts) {
-          if (!part.startsWith("data: ")) continue;
-          try {
-            const json = JSON.parse(part.slice(6));
-            if (json.content) {
-              fullText += json.content;
-              setStreamBuffer(fullText);
-            }
-              if (json.done) {
-                setMessages((prev) => [
-                  ...prev,
-                  { id: Date.now().toString() + "a", role: "assistant", content: fullText },
-                ]);
-                setStreamBuffer("");
-                if (voiceEnabled) {
-                  Speech.speak(fullText.replace(/[*#]/g, ''), { rate: 1.0 });
-                }
-              }
-            } catch {}
+      es.addEventListener("message", (event) => {
+        if (!event.data) return;
+        try {
+          const json = JSON.parse(event.data);
+          if (json.content) {
+            fullText += json.content;
+            setStreamBuffer(fullText);
           }
-        }
-      } catch {
+          if (json.done) {
+            setMessages((prev) => [
+              ...prev,
+              { id: Date.now().toString() + "a", role: "assistant", content: fullText },
+            ]);
+            setStreamBuffer("");
+            if (voiceEnabled) {
+              Speech.speak(fullText.replace(/[*#]/g, ''), { rate: 1.0 });
+            }
+            es.close();
+            setStreaming(false);
+          }
+        } catch {}
+      });
+
+      es.addEventListener("error", (e: any) => {
+        es.close();
         setMessages((prev) => [
           ...prev,
-          { id: Date.now().toString() + "e", role: "assistant", content: "Sorry, something went wrong. Please try again." },
+          { id: Date.now().toString() + "e", role: "assistant", content: `Error: ${e.message || String(e)}` },
         ]);
         setStreamBuffer("");
-      } finally {
         setStreaming(false);
-      }
+      });
+    } catch (e: any) {
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now().toString() + "e", role: "assistant", content: `Error: ${e.message || String(e)}` },
+      ]);
+      setStreamBuffer("");
+      setStreaming(false);
+    }
     };
 
   const allMessages: ChatMessage[] = [

@@ -42,6 +42,8 @@ function RootLayoutNav() {
 
 import { AuthProvider } from "./context/AuthContext";
 
+import { Platform, View } from "react-native";
+
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
@@ -58,14 +60,26 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
+  const appContent = (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <RootLayoutNav />
+    </GestureHandlerRootView>
+  );
+
   return (
     <ErrorBoundary>
       <AuthProvider>
         <SafeAreaProvider>
           <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <RootLayoutNav />
-            </GestureHandlerRootView>
+            {Platform.OS === 'web' ? (
+              <View style={{ flex: 1, backgroundColor: '#e2e8f0', alignItems: 'center' }}>
+                <View style={{ flex: 1, width: '100%', maxWidth: 450, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: {width:0,height:10}, shadowOpacity: 0.1, shadowRadius: 20, overflow: 'hidden' }}>
+                  {appContent}
+                </View>
+              </View>
+            ) : (
+              appContent
+            )}
           </QueryClientProvider>
         </SafeAreaProvider>
       </AuthProvider>
