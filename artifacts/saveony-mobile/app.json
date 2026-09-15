@@ -14,9 +14,16 @@
       "backgroundColor": "#f8fafc"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.saveony.app"
     },
-    "android": {},
+    "android": {
+      "package": "com.saveony.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#6C4FF5"
+      }
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
