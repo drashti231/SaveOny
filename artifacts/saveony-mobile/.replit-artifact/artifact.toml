@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/saveony-mobile/"
+title = "SAVEONY Mobile"
+version = "1.0.0"
+id = "artifacts/saveony-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/saveony-mobile/" ]
+localPort = 18367
+
+[services.development]
+run = "pnpm --filter @workspace/saveony-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/saveony-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/saveony-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "18367"
+BASE_PATH = "/saveony-mobile/"
