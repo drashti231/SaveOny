@@ -31,7 +31,7 @@ import { useColors } from "@/hooks/useColors";
 
 const fmt = (n: number) => `₹${new Intl.NumberFormat("en-IN").format(Math.round(n))}`;
 
-const GOAL_COLORS = ["#1db970", "#0ea5e9", "#6366f1", "#f59e0b", "#f43f5e"];
+const GOAL_COLORS = ["#6C4FF5", "#38BDF8", "#22C55E", "#F59E0B", "#EF4444"];
 
 interface GoalForm {
   name: string;
@@ -154,30 +154,35 @@ export default function SavingsScreen() {
             return (
               <View style={styles.card}>
                 <View style={styles.cardTop}>
-                  <View style={[styles.goalDot, { backgroundColor: accentColor }]} />
-                  <Text style={styles.goalName} numberOfLines={1}>{item.name}</Text>
-                  <View style={styles.cardActions}>
-                    <TouchableOpacity onPress={() => openEdit(item)} style={styles.actionBtn}>
-                      <Feather name="edit-2" size={15} color={colors.mutedForeground} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionBtn}>
-                      <Feather name="trash-2" size={15} color={colors.mutedForeground} />
-                    </TouchableOpacity>
+                  <View style={[styles.iconWrap, { backgroundColor: `${accentColor}20` }]}>
+                    <Feather name={item.name.toLowerCase().includes("trip") ? "map" : item.name.toLowerCase().includes("car") ? "truck" : "target"} size={20} color={accentColor} />
+                  </View>
+                  <View style={styles.goalInfo}>
+                    <Text style={styles.goalName} numberOfLines={1}>{item.name}</Text>
+                    <Text style={styles.targetAmt}>Target: {fmt(item.targetAmount)}</Text>
+                  </View>
+                  <View style={[styles.pctPill, { backgroundColor: `${accentColor}15` }]}>
+                    <Text style={[styles.pctText, { color: accentColor }]}>{pct}%</Text>
                   </View>
                 </View>
+
                 <View style={styles.amountRow}>
+                  <Text style={styles.currentLabel}>Current</Text>
                   <Text style={[styles.currentAmt, { color: accentColor }]}>{fmt(item.currentAmount)}</Text>
-                  <Text style={styles.separator}> / </Text>
-                  <Text style={styles.targetAmt}>{fmt(item.targetAmount)}</Text>
-                  <View style={{ flex: 1 }} />
-                  <Text style={[styles.pctText, { color: accentColor }]}>{pct}%</Text>
                 </View>
+
                 <View style={styles.progressTrack}>
                   <View style={[styles.progressFill, { width: `${pct}%`, backgroundColor: accentColor }]} />
                 </View>
-                <Text style={styles.remainText}>
-                  {fmt(Math.max(0, item.targetAmount - item.currentAmount))} remaining
-                </Text>
+                
+                <View style={styles.cardActions}>
+                  <TouchableOpacity onPress={() => openEdit(item)} style={styles.actionBtn}>
+                    <Text style={styles.actionBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionBtn}>
+                    <Text style={[styles.actionBtnText, { color: colors.destructive }]}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             );
           }}
@@ -270,20 +275,27 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.03,
+      shadowRadius: 8,
+      elevation: 2,
     },
-    cardTop: { flexDirection: "row", alignItems: "center", marginBottom: 10, gap: 8 },
-    goalDot: { width: 10, height: 10, borderRadius: 5 },
-    goalName: { flex: 1, fontSize: 15, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
-    cardActions: { flexDirection: "row", gap: 4 },
-    actionBtn: { padding: 6 },
-    amountRow: { flexDirection: "row", alignItems: "baseline", marginBottom: 8 },
-    currentAmt: { fontSize: 18, fontWeight: "700", fontFamily: "Inter_700Bold" },
-    separator: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
-    targetAmt: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
-    pctText: { fontSize: 15, fontWeight: "700", fontFamily: "Inter_700Bold" },
-    progressTrack: { height: 8, backgroundColor: colors.secondary, borderRadius: 4, overflow: "hidden", marginBottom: 6 },
+    cardTop: { flexDirection: "row", alignItems: "center", marginBottom: 16, gap: 12 },
+    iconWrap: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+    goalInfo: { flex: 1 },
+    goalName: { fontSize: 16, fontWeight: "600", color: colors.foreground, fontFamily: "Inter_600SemiBold", marginBottom: 4 },
+    targetAmt: { fontSize: 13, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+    pctPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+    pctText: { fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+    amountRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+    currentLabel: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_500Medium" },
+    currentAmt: { fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold" },
+    progressTrack: { height: 8, backgroundColor: colors.secondary, borderRadius: 4, overflow: "hidden", marginBottom: 16 },
     progressFill: { height: "100%", borderRadius: 4 },
-    remainText: { fontSize: 12, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
+    cardActions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
+    actionBtn: { padding: 8, borderRadius: 8, backgroundColor: colors.secondary },
+    actionBtnText: { fontSize: 13, color: colors.foreground, fontFamily: "Inter_500Medium" },
     emptyState: { alignItems: "center", paddingVertical: 60, gap: 8 },
     emptyTitle: { fontSize: 18, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
     emptyText: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },

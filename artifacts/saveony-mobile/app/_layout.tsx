@@ -36,11 +36,22 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="budgets" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="reports" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="analytics" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="bills" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="bill-reminders" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="ai-assistant" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="settings" options={{ headerShown: false, presentation: "card" }} />
+      <Stack.Screen name="add-transaction" options={{ headerShown: false, presentation: "modal" }} />
+      <Stack.Screen name="add-budget" options={{ headerShown: false, presentation: "modal" }} />
+      <Stack.Screen name="add-bill" options={{ headerShown: false, presentation: "modal" }} />
     </Stack>
   );
 }
 
 import { AuthProvider } from "./context/AuthContext";
+import { PinProvider } from "./context/PinContext";
 
 import { Platform, View } from "react-native";
 
@@ -69,19 +80,21 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <SafeAreaProvider>
-          <QueryClientProvider client={queryClient}>
-            {Platform.OS === 'web' ? (
-              <View style={{ flex: 1, backgroundColor: '#e2e8f0', alignItems: 'center' }}>
-                <View style={{ flex: 1, width: '100%', maxWidth: 450, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: {width:0,height:10}, shadowOpacity: 0.1, shadowRadius: 20, overflow: 'hidden' }}>
-                  {appContent}
+        <PinProvider>
+          <SafeAreaProvider>
+            <QueryClientProvider client={queryClient}>
+              {Platform.OS === 'web' ? (
+                <View style={{ flex: 1, backgroundColor: '#e2e8f0', alignItems: 'center' }}>
+                  <View style={{ flex: 1, width: '100%', maxWidth: 450, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: {width:0,height:10}, shadowOpacity: 0.1, shadowRadius: 20, overflow: 'hidden' }}>
+                    {appContent}
+                  </View>
                 </View>
-              </View>
-            ) : (
-              appContent
-            )}
-          </QueryClientProvider>
-        </SafeAreaProvider>
+              ) : (
+                appContent
+              )}
+            </QueryClientProvider>
+          </SafeAreaProvider>
+        </PinProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

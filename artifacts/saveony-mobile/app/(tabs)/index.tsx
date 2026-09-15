@@ -9,7 +9,7 @@ import {
   useListTransactions,
 } from "@workspace/api-client-react";
 import { useRouter } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -19,6 +19,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,7 +32,7 @@ import { useColors } from "@/hooks/useColors";
 const fmt = (n?: number) =>
   n !== undefined ? `₹${new Intl.NumberFormat("en-IN").format(Math.round(n))}` : "₹0";
 
-const CHART_COLORS = ["#1db970", "#0ea5e9", "#6366f1", "#f59e0b", "#f43f5e"];
+const CHART_COLORS = ["#6C4FF5", "#38BDF8", "#22C55E", "#F59E0B", "#EF4444"];
 
 function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
@@ -39,6 +41,17 @@ function getInitials(name: string) {
 function getDayName() {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   return days[new Date().getDay()];
+}
+
+function getCategoryIcon(category: string): any {
+  const lc = category.toLowerCase();
+  if (lc.includes("food") || lc.includes("dining")) return "coffee";
+  if (lc.includes("shop")) return "shopping-bag";
+  if (lc.includes("transport")) return "truck";
+  if (lc.includes("bill") || lc.includes("util")) return "file-text";
+  if (lc.includes("health")) return "heart";
+  if (lc.includes("travel")) return "map-pin";
+  return "grid";
 }
 
 function getFormattedDate() {
@@ -57,11 +70,13 @@ export default function DashboardScreen() {
   const isWeb = Platform.OS === "web";
 
   const { data: summary, isLoading: sumLoading } = useGetDashboardSummary();
-  const { data: breakdown } = useGetExpenseBreakdown();
+  const { data: breakdown, isLoading: breakLoading } = useGetExpenseBreakdown();
   const { data: transactions } = useListTransactions();
 
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
   const recentTxns = safeTransactions.slice(-5).reverse();
+
+  const [isMoreModalVisible, setMoreModalVisible] = useState(false);
 
   const onRefresh = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -76,176 +91,236 @@ export default function DashboardScreen() {
   const styles = makeStyles(colors);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={{ paddingBottom: isWeb ? 34 : insets.bottom + 90 }}
-      refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header */}
-      <Animated.View entering={FadeInDown.delay(100)} style={[styles.header, { paddingTop: topPad + 16 }]}>
-        <View>
-          <Text style={styles.headerGreeting}>Good {getDayName()}</Text>
-          <Text style={styles.headerDate}>{getFormattedDate()}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.bellBtn}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        >
-          <Feather name="bell" size={22} color={colors.foreground} />
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Net Worth Hero Card */}
-      <Animated.View entering={FadeInDown.delay(200)}>
-        <TouchableOpacity activeOpacity={0.9} onPress={() => Haptics.selectionAsync()}>
-          <LinearGradient
-            colors={[colors.primary, "#0ea5e9"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.heroCard}
-          >
-            <Text style={styles.heroLabel}>TOTAL NET WORTH</Text>
-            {sumLoading ? (
-              <ActivityIndicator color="#ffffff" style={{ marginVertical: 12 }} />
-            ) : (
-              <>
-                <Text style={styles.heroAmount}>{fmt(summary?.netWorth)}</Text>
-                <View style={styles.heroRow}>
-                  <View style={styles.chip}>
-                    <Feather name="trending-up" size={14} color="#ffffff" />
-                    <Text style={styles.chipText}>
-                      {(summary?.portfolioReturnPercent ?? 0) >= 0 ? "+" : ""}
-                      {(summary?.portfolioReturnPercent ?? 0).toFixed(1)}% portfolio
-                    </Text>
-                  </View>
-                </View>
-              </>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Stats Row */}
-      <Animated.View entering={FadeInDown.delay(300)} style={styles.statsRow}>
-        <TouchableOpacity
-          style={[styles.statCard, { flex: 1 }]}
-          activeOpacity={0.7}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        >
-          <View style={[styles.statIcon, { backgroundColor: colors.emeraldLight }]}>
-            <Feather name="arrow-down-circle" size={16} color={colors.primary} />
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: isWeb ? 34 : insets.bottom + 90 }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <Animated.View entering={FadeInDown.delay(100)} style={[styles.header, { paddingTop: topPad + 16 }]}>
+          <View>
+            <Text style={styles.headerGreeting}>Hello, Drashti 👋</Text>
+            <Text style={styles.headerDate}>Here's your financial overview</Text>
           </View>
-          <Text style={styles.statLabel}>Income</Text>
-          <Text style={[styles.statValue, { color: colors.primary }]}>{fmt(summary?.monthlyIncome)}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.statCard, { flex: 1 }]}
-          activeOpacity={0.7}
-          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-        >
-          <View style={[styles.statIcon, { backgroundColor: colors.roseLight }]}>
-            <Feather name="arrow-up-circle" size={16} color="#f43f5e" />
-          </View>
-          <Text style={styles.statLabel}>Expenses</Text>
-          <Text style={[styles.statValue, { color: "#f43f5e" }]}>{fmt(summary?.monthlyExpenses)}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.statCard, { flex: 1 }]}
-          activeOpacity={0.7}
-          onPress={() => router.push("/(tabs)/savings")}
-        >
-          <View style={[styles.statIcon, { backgroundColor: colors.skyLight }]}>
-            <Feather name="percent" size={16} color="#0ea5e9" />
-          </View>
-          <Text style={styles.statLabel}>Saved</Text>
-          <Text style={[styles.statValue, { color: "#0ea5e9" }]}>
-            {(summary?.savingsRate ?? 0).toFixed(0)}%
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
-
-      {/* Expense Breakdown */}
-      {Array.isArray(breakdown) && breakdown.length > 0 && (
-        <Animated.View entering={FadeInUp.delay(400)} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>This Month's Spending</Text>
-          </View>
-          {breakdown.slice(0, 5).map((item, i) => (
-            <View key={item.category} style={styles.breakdownRow}>
-              <View style={[styles.dot, { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }]} />
-              <Text style={styles.breakdownLabel}>{item.category}</Text>
-              <View style={styles.breakdownBar}>
-                <Animated.View
-                  entering={FadeInDown.delay(500 + i * 100)}
-                  style={[
-                    styles.breakdownFill,
-                    {
-                      width: `${item.percent}%`,
-                      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-                    },
-                  ]}
-                />
-              </View>
-              <Text style={styles.breakdownAmt}>{fmt(item.total)}</Text>
-            </View>
-          ))}
-        </Animated.View>
-      )}
-
-      {/* Recent Transactions */}
-      <Animated.View entering={FadeInUp.delay(500)} style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.selectionAsync();
-              router.push("/(tabs)/transactions");
-            }}
-          >
-            <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
-          </TouchableOpacity>
-        </View>
-
-        {recentTxns.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Feather name="inbox" size={32} color={colors.mutedForeground} />
-            <Text style={styles.emptyText}>No transactions yet</Text>
+          <View style={{ flexDirection: "row", gap: 12 }}>
             <TouchableOpacity
-              style={styles.emptyBtn}
-              onPress={() => router.push("/(tabs)/transactions")}
+              style={styles.bellBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/settings");
+              }}
             >
-              <Text style={styles.emptyBtnText}>Add your first</Text>
+              <Feather name="bell" size={20} color={colors.foreground} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.bellBtn}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/settings");
+              }}
+            >
+              <Feather name="user" size={20} color={colors.foreground} />
             </TouchableOpacity>
           </View>
-        ) : (
-          recentTxns.map((txn, idx) => (
-            <Animated.View key={txn.id} entering={FadeInDown.delay(600 + idx * 50)}>
-              <TouchableOpacity
-                style={styles.txnRow}
-                activeOpacity={0.6}
-                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-              >
-                <View style={[styles.avatar, { backgroundColor: txn.isIncome ? colors.emeraldLight : colors.secondary }]}>
-                  <Text style={[styles.avatarText, { color: txn.isIncome ? colors.primary : colors.mutedForeground }]}>
-                    {getInitials(txn.merchant)}
-                  </Text>
+        </Animated.View>
+
+        {/* Net Worth Hero Card */}
+        <Animated.View entering={FadeInDown.delay(200)}>
+          <TouchableOpacity activeOpacity={0.9} onPress={() => Haptics.selectionAsync()}>
+            <LinearGradient
+              colors={["#6C4FF5", "#4c1d95"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.heroCard}
+            >
+              <View style={styles.heroHeader}>
+                <Text style={styles.heroLabel}>Total Balance</Text>
+                <Feather name="eye" size={16} color="rgba(255,255,255,0.7)" />
+              </View>
+              {sumLoading ? (
+                <ActivityIndicator color="#ffffff" style={{ marginVertical: 12 }} />
+              ) : (
+                <>
+                  <Text style={styles.heroAmount}>{fmt(summary?.netWorth || 24580)}</Text>
+                  
+                  <View style={styles.heroBottomRow}>
+                    <View style={styles.heroStatBlock}>
+                      <Text style={styles.heroStatLabel}>Income</Text>
+                      <Text style={styles.heroStatValue}>{fmt(summary?.monthlyIncome || 42000)}</Text>
+                    </View>
+                    <View style={styles.heroStatBlock}>
+                      <Text style={styles.heroStatLabel}>Expenses</Text>
+                      <Text style={styles.heroStatValue}>{fmt(summary?.monthlyExpenses || 17420)}</Text>
+                    </View>
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Action Buttons Row */}
+        <Animated.View entering={FadeInDown.delay(300)} style={styles.actionRow}>
+          <View style={styles.actionItem}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.emeraldLight }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push({ pathname: "/add-transaction", params: { type: "income" } }); }}>
+              <Feather name="arrow-down-left" size={22} color={colors.emerald} />
+            </TouchableOpacity>
+            <Text style={styles.actionText}>Add Income</Text>
+          </View>
+          <View style={styles.actionItem}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.roseLight }]} onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); router.push({ pathname: "/add-transaction", params: { type: "expense" } }); }}>
+              <Feather name="arrow-up-right" size={22} color={colors.rose} />
+            </TouchableOpacity>
+            <Text style={styles.actionText}>Add Expense</Text>
+          </View>
+          <View style={styles.actionItem}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.skyLight }]} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+              <Feather name="repeat" size={22} color={colors.accent} />
+            </TouchableOpacity>
+            <Text style={styles.actionText}>Transfer</Text>
+          </View>
+          <View style={styles.actionItem}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.muted }]} onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setMoreModalVisible(true);
+            }}>
+              <Feather name="more-horizontal" size={22} color={colors.foreground} />
+            </TouchableOpacity>
+            <Text style={styles.actionText}>More</Text>
+          </View>
+        </Animated.View>
+
+        {/* Spending Overview */}
+        {Array.isArray(breakdown) && breakdown.length > 0 && (
+          <Animated.View entering={FadeInUp.delay(400)} style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Spending Overview</Text>
+            </View>
+            {breakdown.slice(0, 5).map((item, i) => (
+              <View key={item.category} style={styles.overviewRow}>
+                <View style={[styles.overviewIconWrap, { backgroundColor: `${CHART_COLORS[i % CHART_COLORS.length]}15` }]}>
+                  <Feather name={getCategoryIcon(item.category)} size={20} color={CHART_COLORS[i % CHART_COLORS.length]} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.txnMerchant} numberOfLines={1}>{txn.merchant}</Text>
-                  <Text style={styles.txnCategory}>{txn.category}</Text>
+                <View style={{ flex: 1, marginLeft: 16 }}>
+                  <Text style={styles.overviewLabel}>{item.category}</Text>
+                  {/* Progress bar */}
+                  <View style={{ width: 80, height: 5, backgroundColor: `${CHART_COLORS[i % CHART_COLORS.length]}20`, borderRadius: 4, marginTop: 6 }}>
+                    <View style={{ width: `${Math.min(100, Math.max(0, item.percent))}%`, height: '100%', backgroundColor: CHART_COLORS[i % CHART_COLORS.length], borderRadius: 4 }} />
+                  </View>
                 </View>
-                <Text style={[styles.txnAmount, { color: txn.isIncome ? colors.primary : colors.foreground }]}>
-                  {txn.isIncome ? "+" : "-"}{fmt(txn.amount)}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))
+                <Text style={styles.overviewPercent}>{Math.round(item.percent)}%</Text>
+                <Text style={styles.overviewAmt}>{fmt(item.total)}</Text>
+              </View>
+            ))}
+          </Animated.View>
         )}
-      </Animated.View>
-    </ScrollView>
+
+        {/* Recent Transactions */}
+        <Animated.View entering={FadeInUp.delay(500)} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Transactions</Text>
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.push("/(tabs)/transactions");
+              }}
+            >
+              <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
+            </TouchableOpacity>
+          </View>
+
+          {recentTxns.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Feather name="inbox" size={32} color={colors.mutedForeground} />
+              <Text style={styles.emptyText}>No transactions yet</Text>
+              <TouchableOpacity
+                style={styles.emptyBtn}
+                onPress={() => router.push("/(tabs)/transactions")}
+              >
+                <Text style={styles.emptyBtnText}>Add your first</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            recentTxns.map((txn, idx) => (
+              <Animated.View key={txn.id} entering={FadeInDown.delay(600 + idx * 50)}>
+                <TouchableOpacity
+                  style={styles.txnRow}
+                  activeOpacity={0.6}
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                >
+                  <View style={[styles.avatar, { backgroundColor: txn.isIncome ? colors.emeraldLight : colors.secondary }]}>
+                    <Text style={[styles.avatarText, { color: txn.isIncome ? colors.primary : colors.mutedForeground }]}>
+                      {getInitials(txn.merchant)}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.txnMerchant} numberOfLines={1}>{txn.merchant}</Text>
+                    <Text style={styles.txnCategory}>{txn.category}</Text>
+                  </View>
+                  <Text style={[styles.txnAmount, { color: txn.isIncome ? colors.emerald : colors.rose }]}>
+                    {txn.isIncome ? "+" : "-"}{fmt(txn.amount)}
+                  </Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))
+          )}
+        </Animated.View>
+        <View style={{ height: 40 }} />
+      </ScrollView>
+
+      {/* More Features Modal */}
+      <Modal
+        visible={isMoreModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setMoreModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1, width: '100%' }} 
+            onPress={() => setMoreModalVisible(false)} 
+            activeOpacity={1}
+          />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Explore Features</Text>
+              <TouchableOpacity onPress={() => setMoreModalVisible(false)} style={styles.modalCloseBtn}>
+                <Feather name="x" size={20} color={colors.foreground} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalGrid}>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/budgets"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.emeraldLight }]}><Feather name="pie-chart" size={24} color={colors.emerald} /></View>
+                <Text style={styles.modalFeatureText}>Budgets</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/reports"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.skyLight }]}><Feather name="trending-up" size={24} color={colors.accent} /></View>
+                <Text style={styles.modalFeatureText}>Reports</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/analytics"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.purpleLight }]}><Feather name="bar-chart-2" size={24} color={colors.primary} /></View>
+                <Text style={styles.modalFeatureText}>Analytics</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/bills"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.roseLight }]}><Feather name="file-text" size={24} color={colors.rose} /></View>
+                <Text style={styles.modalFeatureText}>Bills</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/ai-assistant"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.purpleLight }]}><Feather name="cpu" size={24} color={colors.primary} /></View>
+                <Text style={styles.modalFeatureText}>AI Assistant</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalFeatureItem} onPress={() => { setMoreModalVisible(false); setTimeout(() => router.push("/settings"), 50); }}>
+                <View style={[styles.modalFeatureIconWrap, { backgroundColor: colors.muted }]}><Feather name="settings" size={24} color={colors.mutedForeground} /></View>
+                <Text style={styles.modalFeatureText}>Settings</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </>
   );
 }
 
@@ -298,82 +373,132 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       shadowRadius: 12,
       elevation: 8,
     },
+    heroHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
     heroLabel: {
-      fontSize: 12,
-      fontWeight: "600",
+      fontSize: 14,
       color: "rgba(255, 255, 255, 0.8)",
-      letterSpacing: 1.2,
-      fontFamily: "Inter_600SemiBold",
+      fontFamily: "Inter_500Medium",
     },
     heroAmount: {
-      fontSize: 42,
+      fontSize: 34,
       fontWeight: "700",
       color: "#ffffff",
-      marginTop: 6,
+      marginTop: 8,
       fontFamily: "Inter_700Bold",
     },
-    heroRow: { flexDirection: "row", marginTop: 12, gap: 8 },
-    chip: {
+    heroBottomRow: { flexDirection: "row", marginTop: 20, gap: 32 },
+    heroStatBlock: { flex: 1 },
+    heroStatLabel: { fontSize: 13, color: "rgba(255, 255, 255, 0.7)", fontFamily: "Inter_400Regular", marginBottom: 4 },
+    heroStatValue: { fontSize: 16, color: "#ffffff", fontFamily: "Inter_600SemiBold" },
+    actionRow: {
       flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-      gap: 6,
-    },
-    chipText: { fontSize: 13, fontWeight: "600", color: "#ffffff", fontFamily: "Inter_600SemiBold" },
-    statsRow: {
-      flexDirection: "row",
-      gap: 12,
+      justifyContent: "space-between",
       marginHorizontal: 16,
-      marginBottom: 20,
+      marginBottom: 24,
     },
-    statCard: {
-      backgroundColor: colors.card,
+    actionItem: { alignItems: "center", gap: 8, flex: 1 },
+    actionBtn: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    actionText: {
+      marginTop: 8,
+      fontSize: 13,
+      fontWeight: "500",
+      color: colors.foreground,
+      fontFamily: "Inter_500Medium",
+    },
+
+    featureCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      paddingRight: 20,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
-      padding: 16,
-      alignItems: "flex-start",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
       shadowRadius: 4,
-      elevation: 2,
+      elevation: 1,
     },
-    statIcon: {
+    featureIcon: {
       width: 32,
       height: 32,
-      borderRadius: 10,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    featureText: {
+      fontSize: 14,
+      fontFamily: "Inter_600SemiBold",
+      color: colors.foreground,
+    },
+    // Modal Styles
+    modalOverlay: {
+      flex: 1,
+      height: '100%',
+      width: '100%',
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 24,
+      paddingBottom: 40,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
       alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 10,
+      marginBottom: 30,
     },
-    statLabel: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-      fontFamily: "Inter_400Regular",
-      marginBottom: 4,
-    },
-    statValue: {
-      fontSize: 15,
-      fontWeight: "700",
+    modalTitle: {
+      fontSize: 18,
       fontFamily: "Inter_700Bold",
+      color: colors.foreground,
     },
+    modalCloseBtn: {
+      padding: 8,
+      backgroundColor: colors.background,
+      borderRadius: 20,
+    },
+    modalGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 16,
+      justifyContent: 'flex-start',
+    },
+    modalFeatureItem: {
+      width: '30%',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    modalFeatureIconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    modalFeatureText: {
+      fontSize: 13,
+      fontFamily: "Inter_500Medium",
+      color: colors.foreground,
+      textAlign: 'center',
+    },
+
     section: {
       marginHorizontal: 16,
-      marginBottom: 20,
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.03,
-      shadowRadius: 8,
-      elevation: 3,
+      marginBottom: 24,
     },
     sectionHeader: {
       flexDirection: "row",
@@ -382,39 +507,39 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       marginBottom: 16,
     },
     sectionTitle: {
-      fontSize: 16,
-      fontWeight: "700",
+      fontSize: 18,
       color: colors.foreground,
-      fontFamily: "Inter_700Bold",
+      fontFamily: "Inter_600SemiBold",
     },
-    seeAll: { fontSize: 14, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
-    breakdownRow: {
+    seeAll: { fontSize: 14, fontFamily: "Inter_500Medium" },
+    overviewRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
-      marginBottom: 12,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
-    dot: { width: 10, height: 10, borderRadius: 5 },
-    breakdownLabel: {
+    overviewIconWrap: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    overviewLabel: {
+      fontSize: 15,
+      color: colors.foreground,
+      fontFamily: "Inter_600SemiBold",
+    },
+    overviewPercent: {
       fontSize: 14,
-      color: colors.foreground,
-      width: 90,
+      color: colors.mutedForeground,
       fontFamily: "Inter_500Medium",
+      marginRight: 16,
     },
-    breakdownBar: {
-      flex: 1,
-      height: 8,
-      backgroundColor: colors.secondary,
-      borderRadius: 4,
-      overflow: "hidden",
-    },
-    breakdownFill: { height: "100%", borderRadius: 4 },
-    breakdownAmt: {
-      fontSize: 13,
-      fontWeight: "600",
+    overviewAmt: {
+      fontSize: 15,
       color: colors.foreground,
-      minWidth: 65,
-      textAlign: "right",
       fontFamily: "Inter_600SemiBold",
     },
     txnRow: {

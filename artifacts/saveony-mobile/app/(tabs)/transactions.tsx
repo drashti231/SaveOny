@@ -132,9 +132,32 @@ export default function TransactionsScreen() {
   };
 
   const safeTransactions = Array.isArray(transactions) ? transactions : [];
-  const sorted = [...safeTransactions].reverse();
-  const topPad = isWeb ? 67 : insets.top;
+  
+  // Filtering
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"All" | "Income" | "Expense">("All");
 
+  const filtered = safeTransactions.filter(t => {
+    if (filter === "Income" && !t.isIncome) return false;
+    if (filter === "Expense" && t.isIncome) return false;
+    if (search && !t.merchant.toLowerCase().includes(search.toLowerCase()) && !t.category.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  const sorted = [...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Grouping by Date
+  const grouped: { title: string, data: typeof sorted }[] = [];
+  sorted.forEach(t => {
+    let title = formatDate(t.date);
+    if (t.date === today()) title = "Today, " + title;
+    
+    const existing = grouped.find(g => g.title === title);
+    if (existing) existing.data.push(t);
+    else grouped.push({ title, data: [t] });
+  });
+
+  const topPad = isWeb ? 67 : insets.top;
   const styles = makeStyles(colors);
 
   return (
@@ -146,8 +169,33 @@ export default function TransactionsScreen() {
           style={styles.addBtn}
           onPress={() => { setShowModal(true); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
         >
-          <Feather name="plus" size={20} color={colors.primaryForeground} />
+          <Feather name="bell" size={20} color={colors.foreground} />
         </TouchableOpacity>
+      </View>
+
+      {/* Search & Filters */}
+      <View style={styles.filterSection}>
+        <View style={styles.searchBox}>
+          <Feather name="search" size={18} color={colors.mutedForeground} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search transactions..."
+            placeholderTextColor={colors.mutedForeground}
+            value={search}
+            onChangeText={setSearch}
+          />
+        </View>
+        <View style={styles.filterRow}>
+          {["All", "Income", "Expense"].map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.filterBtn, filter === f && styles.filterBtnActive]}
+              onPress={() => { Haptics.selectionAsync(); setFilter(f as any); }}
+            >
+              <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>{f}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {isLoading ? (
@@ -156,143 +204,40 @@ export default function TransactionsScreen() {
         </View>
       ) : (
         <FlatList
-          data={sorted}
-          keyExtractor={(item) => item.id.toString()}
+          data={grouped}
+          keyExtractor={(item) => item.title}
           contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingTop: 12,
+            paddingHorizontal: 20,
             paddingBottom: isWeb ? 34 : insets.bottom + 90,
           }}
           refreshControl={<RefreshControl refreshing={false} onRefresh={refetch} tintColor={colors.primary} />}
-          scrollEnabled={sorted.length > 0}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Feather name="inbox" size={40} color={colors.mutedForeground} />
               <Text style={styles.emptyTitle}>No transactions</Text>
-              <Text style={styles.emptyText}>Tap + to add your first transaction</Text>
             </View>
           }
-          renderItem={({ item }) => (
-            <View style={styles.txnCard}>
-              <View style={[styles.avatar, { backgroundColor: item.isIncome ? colors.emeraldLight : colors.secondary }]}>
-                <Text style={[styles.avatarText, { color: item.isIncome ? colors.primary : colors.mutedForeground }]}>
-                  {getInitials(item.merchant)}
-                </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.merchant} numberOfLines={1}>{item.merchant}</Text>
-                <Text style={styles.meta}>{item.category} · {formatDate(item.date)}</Text>
-              </View>
-              <Text style={[styles.amount, { color: item.isIncome ? colors.primary : colors.foreground }]}>
-                {item.isIncome ? "+" : "-"}{fmt(item.amount)}
-              </Text>
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={() => handleDelete(item.id)}
-              >
-                <Feather name="trash-2" size={16} color={colors.mutedForeground} />
-              </TouchableOpacity>
+          renderItem={({ item: group }) => (
+            <View style={{ marginBottom: 24 }}>
+              <Text style={styles.dateHeader}>{group.title}</Text>
+              {group.data.map(item => (
+                <View key={item.id} style={styles.txnCard}>
+                  <View style={[styles.avatar, { backgroundColor: item.isIncome ? colors.emeraldLight : colors.roseLight }]}>
+                    <Feather name={item.isIncome ? "arrow-down-left" : "shopping-bag"} size={20} color={item.isIncome ? colors.emerald : colors.rose} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 16 }}>
+                    <Text style={styles.merchant} numberOfLines={1}>{item.merchant}</Text>
+                    <Text style={styles.meta}>{item.category} · {item.isIncome ? "Bank Transfer" : "UPI"}</Text>
+                  </View>
+                  <Text style={[styles.amount, { color: item.isIncome ? colors.emerald : colors.rose }]}>
+                    {item.isIncome ? "+" : "-"}{fmt(item.amount)}
+                  </Text>
+                </View>
+              ))}
             </View>
           )}
         />
       )}
-
-      {/* Add Transaction Modal */}
-      <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <View style={[styles.modalContainer, { paddingTop: Platform.OS === "ios" ? 20 : insets.top + 16 }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Transaction</Text>
-              <TouchableOpacity onPress={() => { setShowModal(false); resetForm(); setError(""); }}>
-                <Feather name="x" size={24} color={colors.foreground} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Merchant</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.merchant}
-                  onChangeText={(t) => setForm({ ...form, merchant: t })}
-                  placeholder="e.g. Swiggy"
-                  placeholderTextColor={colors.mutedForeground}
-                />
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Amount (₹)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.amount}
-                  onChangeText={(t) => setForm({ ...form, amount: t })}
-                  placeholder="0"
-                  keyboardType="numeric"
-                  placeholderTextColor={colors.mutedForeground}
-                />
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.date}
-                  onChangeText={(t) => setForm({ ...form, date: t })}
-                  placeholder="2026-05-01"
-                  placeholderTextColor={colors.mutedForeground}
-                />
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Category</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-                  <View style={{ flexDirection: "row", gap: 8 }}>
-                    {CATEGORIES.map((cat) => (
-                      <TouchableOpacity
-                        key={cat}
-                        style={[styles.catChip, form.category === cat && styles.catChipActive]}
-                        onPress={() => setForm({ ...form, category: cat })}
-                      >
-                        <Text style={[styles.catChipText, form.category === cat && styles.catChipTextActive]}>
-                          {cat}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </ScrollView>
-              </View>
-              <View style={[styles.formGroup, styles.row]}>
-                <Text style={styles.label}>This is income</Text>
-                <Switch
-                  value={form.isIncome}
-                  onValueChange={(v) => setForm({ ...form, isIncome: v })}
-                  trackColor={{ true: colors.primary, false: colors.border }}
-                  thumbColor="#fff"
-                />
-              </View>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Notes (optional)</Text>
-                <TextInput
-                  style={[styles.input, { height: 72, textAlignVertical: "top" }]}
-                  value={form.notes}
-                  onChangeText={(t) => setForm({ ...form, notes: t })}
-                  placeholder="Optional note"
-                  multiline
-                  placeholderTextColor={colors.mutedForeground}
-                />
-              </View>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
-              <TouchableOpacity
-                style={[styles.submitBtn, createMutation.isPending && { opacity: 0.6 }]}
-                onPress={handleSubmit}
-                disabled={createMutation.isPending}
-              >
-                {createMutation.isPending ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.submitText}>Add Transaction</Text>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
     </View>
   );
 }
@@ -306,98 +251,73 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       alignItems: "center",
       paddingHorizontal: 20,
       paddingBottom: 16,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
     },
-    title: { fontSize: 24, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
+    title: { fontSize: 22, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
     addBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: colors.primary,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.card,
       alignItems: "center",
       justifyContent: "center",
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
     },
+    filterSection: { paddingHorizontal: 20, marginBottom: 16 },
+    searchBox: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: '#f8fafc',
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 24,
+      paddingHorizontal: 16,
+      height: 48,
+      marginBottom: 16,
+    },
+    searchInput: { flex: 1, marginLeft: 10, fontSize: 15, color: colors.foreground, fontFamily: "Inter_400Regular" },
+    filterRow: { 
+      flexDirection: "row", 
+      backgroundColor: colors.muted, 
+      borderRadius: 24, 
+      padding: 4,
+    },
+    filterBtn: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 20,
+      alignItems: "center",
+    },
+    filterBtnActive: { backgroundColor: colors.primary },
+    filterText: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_600SemiBold" },
+    filterTextActive: { color: '#ffffff' },
+    dateHeader: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_500Medium", marginBottom: 16 },
     center: { flex: 1, alignItems: "center", justifyContent: "center" },
     txnCard: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 12,
-      marginBottom: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      gap: 12,
+      paddingVertical: 12,
+      marginBottom: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: 'transparent', // In mockup, they don't have borders, just spacing
     },
     avatar: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       alignItems: "center",
       justifyContent: "center",
     },
-    avatarText: { fontSize: 14, fontWeight: "700", fontFamily: "Inter_700Bold" },
-    merchant: { fontSize: 14, fontWeight: "600", color: colors.foreground, fontFamily: "Inter_600SemiBold" },
-    meta: { fontSize: 12, color: colors.mutedForeground, marginTop: 2, fontFamily: "Inter_400Regular" },
-    amount: { fontSize: 14, fontWeight: "700", fontFamily: "Inter_700Bold" },
-    deleteBtn: { padding: 6 },
+    merchant: { fontSize: 16, color: colors.foreground, fontFamily: "Inter_600SemiBold" },
+    meta: { fontSize: 13, color: colors.mutedForeground, marginTop: 4, fontFamily: "Inter_500Medium" },
+    amount: { fontSize: 15, fontFamily: "Inter_700Bold" },
     emptyState: { alignItems: "center", paddingVertical: 60, gap: 8 },
     emptyTitle: { fontSize: 18, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
-    emptyText: { fontSize: 14, color: colors.mutedForeground, fontFamily: "Inter_400Regular" },
-    modalContainer: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingHorizontal: 20,
-    },
-    modalHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 24,
-    },
-    modalTitle: { fontSize: 20, fontWeight: "700", color: colors.foreground, fontFamily: "Inter_700Bold" },
-    formGroup: { marginBottom: 16 },
-    row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-    label: {
-      fontSize: 13,
-      fontWeight: "600",
-      color: colors.foreground,
-      marginBottom: 6,
-      fontFamily: "Inter_600SemiBold",
-    },
-    input: {
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 10,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      fontSize: 15,
-      color: colors.foreground,
-      fontFamily: "Inter_400Regular",
-    },
-    catChip: {
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    catChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-    catChipText: { fontSize: 13, color: colors.foreground, fontFamily: "Inter_400Regular" },
-    catChipTextActive: { color: "#fff", fontWeight: "600", fontFamily: "Inter_600SemiBold" },
-    errorText: { color: colors.destructive, fontSize: 13, marginBottom: 12, fontFamily: "Inter_400Regular" },
-    submitBtn: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      paddingVertical: 14,
-      alignItems: "center",
-      marginTop: 8,
-      marginBottom: 32,
-    },
-    submitText: { color: "#fff", fontSize: 16, fontWeight: "700", fontFamily: "Inter_700Bold" },
   });
 }

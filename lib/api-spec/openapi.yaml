@@ -19,6 +19,12 @@ tags:
     description: Dashboard summary operations
   - name: openai
     description: OpenAI AI chat and advisor operations
+  - name: budgets
+    description: Budgets operations
+  - name: bills
+    description: Bill Reminders operations
+  - name: reports
+    description: Reports and historical data operations
 
 paths:
   /healthz:
@@ -268,6 +274,154 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ExpenseCategory"
+
+  # ── Budgets ─────────────────────────────────────────────────────────────
+  /budgets:
+    get:
+      operationId: listBudgets
+      tags: [budgets]
+      summary: List all budgets
+      responses:
+        "200":
+          description: List of budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Budget"
+    post:
+      operationId: createBudget
+      tags: [budgets]
+      summary: Create a budget
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BudgetInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Budget"
+
+  /budgets/{id}:
+    delete:
+      operationId: deleteBudget
+      tags: [budgets]
+      summary: Delete a budget
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Bills ─────────────────────────────────────────────────────────────
+  /bills:
+    get:
+      operationId: listBills
+      tags: [bills]
+      summary: List all bills
+      responses:
+        "200":
+          description: List of bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bill"
+    post:
+      operationId: createBill
+      tags: [bills]
+      summary: Create a bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bill"
+
+  /bills/{id}:
+    patch:
+      operationId: updateBill
+      tags: [bills]
+      summary: Update a bill (e.g., mark as paid)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bill"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteBill
+      tags: [bills]
+      summary: Delete a bill
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Reports ─────────────────────────────────────────────────────────────
+  /reports/history:
+    get:
+      operationId: getReportsHistory
+      tags: [reports]
+      summary: Get historical income and expense data
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [weekly, monthly, yearly]
+      responses:
+        "200":
+          description: Historical data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportDataPoint"
 
   # ── OpenAI / AI Advisor ───────────────────────────────────────────────────────
   /openai/conversations:
@@ -639,3 +793,73 @@ components:
           type: string
       required:
         - error
+
+    # ── Budgets ─────────────────────────────────────────────────────────────
+    Budget:
+      type: object
+      required: [id, category, monthlyLimit, createdAt]
+      properties:
+        id:
+          type: integer
+        category:
+          type: string
+        monthlyLimit:
+          type: integer
+        createdAt:
+          type: string
+
+    BudgetInput:
+      type: object
+      required: [category, monthlyLimit]
+      properties:
+        category:
+          type: string
+        monthlyLimit:
+          type: integer
+
+    # ── Bills ─────────────────────────────────────────────────────────────
+    Bill:
+      type: object
+      required: [id, name, amount, dueDate, isPaid, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: integer
+        dueDate:
+          type: string
+        isPaid:
+          type: boolean
+        createdAt:
+          type: string
+
+    BillInput:
+      type: object
+      required: [name, amount, dueDate]
+      properties:
+        name:
+          type: string
+        amount:
+          type: integer
+        dueDate:
+          type: string
+
+    BillUpdate:
+      type: object
+      properties:
+        isPaid:
+          type: boolean
+
+    # ── Reports ─────────────────────────────────────────────────────────────
+    ReportDataPoint:
+      type: object
+      required: [date, income, expense]
+      properties:
+        date:
+          type: string
+        income:
+          type: number
+        expense:
+          type: number

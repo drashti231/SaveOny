@@ -7,6 +7,7 @@ type AuthContextType = {
   isSignedIn: boolean;
   user: User | null;
   signOut: () => Promise<void>;
+  reloadUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -14,11 +15,13 @@ const AuthContext = createContext<AuthContextType>({
   isSignedIn: false,
   user: null,
   signOut: async () => {},
+  reloadUser: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -37,13 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const reloadUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      setRefreshKey(k => k + 1);
+    }
+  };
+
   return (
     <AuthContext.Provider
+      key={refreshKey}
       value={{
         isLoaded,
-        isSignedIn: !!user,
-        user,
+        isSignedIn: !!auth.currentUser || !!user,
+        user: auth.currentUser || user,
         signOut,
+        reloadUser,
       }}
     >
       {children}
@@ -58,6 +70,7 @@ export const useAuth = () => {
     isLoaded: context.isLoaded,
     isSignedIn: context.isSignedIn,
     signOut: context.signOut,
+    reloadUser: context.reloadUser,
     getToken: async () => {
       if (context.user) {
         return await context.user.getIdToken();
@@ -73,5 +86,6 @@ export const useUser = () => {
     user: context.user,
     isLoaded: context.isLoaded,
     isSignedIn: context.isSignedIn,
+    reloadUser: context.reloadUser,
   };
 };

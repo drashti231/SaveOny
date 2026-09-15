@@ -183,6 +183,97 @@ export const GetExpenseBreakdownResponse = zod.array(
 );
 
 /**
+ * @summary List all budgets
+ */
+export const ListBudgetsResponseItem = zod.object({
+  id: zod.number(),
+  category: zod.string(),
+  monthlyLimit: zod.number(),
+  createdAt: zod.string(),
+});
+export const ListBudgetsResponse = zod.array(ListBudgetsResponseItem);
+
+/**
+ * @summary Create a budget
+ */
+export const CreateBudgetBody = zod.object({
+  category: zod.string(),
+  monthlyLimit: zod.number(),
+});
+
+/**
+ * @summary Delete a budget
+ */
+export const DeleteBudgetParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List all bills
+ */
+export const ListBillsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  amount: zod.number(),
+  dueDate: zod.string(),
+  isPaid: zod.boolean(),
+  createdAt: zod.string(),
+});
+export const ListBillsResponse = zod.array(ListBillsResponseItem);
+
+/**
+ * @summary Create a bill
+ */
+export const CreateBillBody = zod.object({
+  name: zod.string(),
+  amount: zod.number(),
+  dueDate: zod.string(),
+});
+
+/**
+ * @summary Update a bill (e.g., mark as paid)
+ */
+export const UpdateBillParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBillBody = zod.object({
+  isPaid: zod.boolean().optional(),
+});
+
+export const UpdateBillResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  amount: zod.number(),
+  dueDate: zod.string(),
+  isPaid: zod.boolean(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Delete a bill
+ */
+export const DeleteBillParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get historical income and expense data
+ */
+export const GetReportsHistoryQueryParams = zod.object({
+  period: zod.enum(["weekly", "monthly", "yearly"]).optional(),
+});
+
+export const GetReportsHistoryResponseItem = zod.object({
+  date: zod.string(),
+  income: zod.number(),
+  expense: zod.number(),
+});
+export const GetReportsHistoryResponse = zod.array(
+  GetReportsHistoryResponseItem,
+);
+
+/**
  * @summary List all AI advisor conversations
  */
 export const ListOpenaiConversationsResponseItem = zod.object({

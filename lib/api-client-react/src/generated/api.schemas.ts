@@ -130,3 +130,53 @@ export interface SendOpenaiMessageBody {
 export interface OpenaiError {
   error: string;
 }
+
+export interface Budget {
+  id: number;
+  category: string;
+  monthlyLimit: number;
+  createdAt: string;
+}
+
+export interface BudgetInput {
+  category: string;
+  monthlyLimit: number;
+}
+
+export interface Bill {
+  id: number;
+  name: string;
+  amount: number;
+  dueDate: string;
+  isPaid: boolean;
+  createdAt: string;
+}
+
+export interface BillInput {
+  name: string;
+  amount: number;
+  dueDate: string;
+}
+
+export interface BillUpdate {
+  isPaid?: boolean;
+}
+
+export interface ReportDataPoint {
+  date: string;
+  income: number;
+  expense: number;
+}
+
+export type GetReportsHistoryParams = {
+  period?: GetReportsHistoryPeriod;
+};
+
+export type GetReportsHistoryPeriod =
+  (typeof GetReportsHistoryPeriod)[keyof typeof GetReportsHistoryPeriod];
+
+export const GetReportsHistoryPeriod = {
+  weekly: "weekly",
+  monthly: "monthly",
+  yearly: "yearly",
+} as const;

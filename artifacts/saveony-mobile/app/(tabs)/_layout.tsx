@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext";
+import { usePin } from "../context/PinContext";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
@@ -7,9 +8,11 @@ import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect } from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme, ActivityIndicator } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { LockScreen } from "../components/LockScreen";
+import { SetPinScreen } from "../components/SetPinScreen";
 
 function NativeTabLayout() {
   return (
@@ -22,21 +25,13 @@ function NativeTabLayout() {
         <Icon sf={{ default: "list.bullet.rectangle", selected: "list.bullet.rectangle.fill" }} />
         <Label>Transactions</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="investments">
-        <Icon sf={{ default: "chart.line.uptrend.xyaxis", selected: "chart.line.uptrend.xyaxis" }} />
-        <Label>Portfolio</Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="savings">
-        <Icon sf={{ default: "banknote", selected: "banknote.fill" }} />
-        <Label>Savings</Label>
+        <Icon sf={{ default: "target", selected: "target" }} />
+        <Label>Goals</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="advisor">
-        <Icon sf={{ default: "sparkles", selected: "sparkles" }} />
-        <Label>AI Advisor</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>Settings</Label>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person.crop.circle", selected: "person.crop.circle.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -100,56 +95,44 @@ function ClassicTabLayout() {
             isIOS ? (
               <SymbolView name="list.bullet.rectangle" tintColor={color} size={24} />
             ) : (
-              <Feather name="list" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
-        name="investments"
-        options={{
-          title: "Portfolio",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={24} />
-            ) : (
-              <Feather name="trending-up" size={22} color={color} />
+              <Feather name="file-text" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
         name="savings"
         options={{
-          title: "Savings",
+          title: "Goals",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="banknote" tintColor={color} size={24} />
+              <SymbolView name="target" tintColor={color} size={24} />
             ) : (
               <Feather name="target" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
-        name="advisor"
+        name="profile"
         options={{
-          title: "AI Advisor",
+          title: "Profile",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="sparkles" tintColor={color} size={24} />
+              <SymbolView name="person.crop.circle" tintColor={color} size={24} />
             ) : (
-              <Feather name="zap" size={22} color={color} />
+              <Feather name="user" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="investments"
         options={{
-          title: "Settings",
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="gearshape" tintColor={color} size={24} />
-            ) : (
-              <Feather name="settings" size={22} color={color} />
-            ),
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="advisor"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
@@ -158,13 +141,32 @@ function ClassicTabLayout() {
 
 export default function TabLayout() {
   const { isSignedIn, getToken } = useAuth();
+  const { isPinSet, isUnlocked } = usePin();
+  const colors = useColors();
 
   useEffect(() => {
     setAuthTokenGetter(() => getToken());
   }, [getToken]);
 
   if (!isSignedIn) {
-    return <Redirect href="/(auth)/sign-in" />;
+    return <Redirect href={"/(auth)" as any} />;
+  }
+
+  // Handle PIN lock logic
+  if (isPinSet === null) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isPinSet) {
+    return <SetPinScreen />;
+  }
+
+  if (!isUnlocked) {
+    return <LockScreen />;
   }
 
   if (isLiquidGlassAvailable()) {

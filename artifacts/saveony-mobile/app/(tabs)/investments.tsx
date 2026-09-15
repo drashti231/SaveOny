@@ -182,9 +182,9 @@ export default function InvestmentsScreen() {
                     <Feather
                       name={isPositive ? "trending-up" : "trending-down"}
                       size={11}
-                      color={isPositive ? colors.primary : "#f43f5e"}
+                      color={isPositive ? colors.primary : "#EF4444"}
                     />
-                    <Text style={[styles.changeText, { color: isPositive ? colors.primary : "#f43f5e" }]}>
+                    <Text style={[styles.changeText, { color: isPositive ? colors.primary : "#EF4444" }]}>
                       {isPositive ? "+" : ""}{item.dayChangePercent.toFixed(2)}%
                     </Text>
                   </View>

@@ -5,6 +5,9 @@ import savingsGoalsRouter from "./savingsGoals";
 import investmentsRouter from "./investments";
 import dashboardRouter from "./dashboard";
 import openaiRouter from "./openai/conversations";
+import budgetsRouter from "./budgets";
+import billsRouter from "./bills";
+import reportsRouter from "./reports";
 
 const router: IRouter = Router();
 
@@ -14,5 +17,8 @@ router.use(savingsGoalsRouter);
 router.use(investmentsRouter);
 router.use(dashboardRouter);
 router.use(openaiRouter);
+router.use(budgetsRouter);
+router.use(billsRouter);
+router.use(reportsRouter);
 
 export default router;

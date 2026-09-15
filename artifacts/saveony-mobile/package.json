@@ -61,6 +61,8 @@
   "dependencies": {
     "expo-speech": "^57.0.3",
     "firebase": "^12.19.0",
+    "react-native-gifted-charts": "^1.4.78",
+    "react-native-linear-gradient": "^2.8.3",
     "react-native-sse": "^1.2.1"
   }
 }

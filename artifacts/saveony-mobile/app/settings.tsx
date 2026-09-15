@@ -1,12 +1,9 @@
-import { useAuth, useUser } from "../context/AuthContext";
+import { useAuth, useUser } from "./context/AuthContext";
 import { Feather } from "@expo/vector-icons";
-import { SymbolView } from "expo-symbols";
 import React, { useState } from "react";
 import {
   Alert,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -15,10 +12,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Stack, useRouter } from "expo-router";
 
 import { useColors } from "@/hooks/useColors";
-
-const isIOS = Platform.OS === "ios";
 
 function SectionHeader({ title }: { title: string }) {
   const colors = useColors();
@@ -139,11 +135,10 @@ function ToggleRow({
   );
 }
 
-export default function SettingsScreen() {
+export default function DetailedSettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { signOut } = useAuth();
-  const { user } = useUser();
+  const router = useRouter();
 
   const [appearance, setAppearance] = useState<"light" | "dark" | "system">(
     "system"
@@ -160,20 +155,6 @@ export default function SettingsScreen() {
   const [biometric, setBiometric] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
 
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const displayName =
-    user?.displayName ??
-    user?.email?.split("@")[0] ??
-    "User";
-  const email = user?.email ?? "";
-  const initials = displayName.slice(0, 2).toUpperCase();
-
-  const handleLogout = async () => {
-    await signOut();
-    setShowLogoutModal(false);
-  };
-
   const themeOptions: { key: "light" | "dark" | "system"; label: string; icon: string }[] = [
     { key: "light", label: "Light", icon: "sun" },
     { key: "dark", label: "Dark", icon: "moon" },
@@ -182,63 +163,27 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          headerTitle: "Settings",
+          headerTitleStyle: { fontFamily: "Inter_700Bold", fontSize: 18 },
+          headerStyle: { backgroundColor: colors.background },
+          headerShadowVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 16 }}>
+              <Feather name="arrow-left" size={24} color={colors.foreground} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
       <ScrollView
         contentContainerStyle={[
           styles.content,
-          { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 120 },
+          { paddingBottom: insets.bottom + 20 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Page title */}
-        <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-          Settings
-        </Text>
-
-        {/* ── PROFILE ── */}
-        <SectionHeader title="Profile" />
-        <Card>
-          <View style={styles.profileRow}>
-            <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
-            <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.foreground }]}>
-                {displayName}
-              </Text>
-              <Text
-                style={[styles.profileEmail, { color: colors.mutedForeground }]}
-              >
-                {email}
-              </Text>
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: colors.emeraldLight },
-                ]}
-              >
-                <Text style={[styles.badgeText, { color: colors.primary }]}>
-                  Premium
-                </Text>
-              </View>
-            </View>
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <Row
-            icon={<RowIcon name="edit-2" bg="#6366f1" />}
-            label="Edit Profile"
-            onPress={() =>
-              Alert.alert("Edit Profile", "Profile editing coming soon.")
-            }
-          />
-          <Row
-            icon={<RowIcon name="lock" bg="#0ea5e9" />}
-            label="Change Password"
-            onPress={() =>
-              Alert.alert("Change Password", "Password change coming soon.")
-            }
-          />
-        </Card>
-
         {/* ── APPEARANCE ── */}
         <SectionHeader title="Appearance" />
         <Card>
@@ -288,19 +233,19 @@ export default function SettingsScreen() {
         <SectionHeader title="Notifications" />
         <Card>
           <ToggleRow
-            icon={<RowIcon name="mail" bg="#6366f1" />}
+            icon={<RowIcon name="mail" bg="#6C4FF5" />}
             label="Email Alerts"
             value={notifEmail}
             onChange={setNotifEmail}
           />
           <ToggleRow
-            icon={<RowIcon name="bell" bg="#f59e0b" />}
+            icon={<RowIcon name="bell" bg="#F59E0B" />}
             label="Push Notifications"
             value={notifPush}
             onChange={setNotifPush}
           />
           <ToggleRow
-            icon={<RowIcon name="bar-chart-2" bg="#0ea5e9" />}
+            icon={<RowIcon name="bar-chart-2" bg="#38BDF8" />}
             label="Weekly Report"
             value={notifWeekly}
             onChange={setNotifWeekly}
@@ -329,7 +274,7 @@ export default function SettingsScreen() {
             onChange={setBiometric}
           />
           <ToggleRow
-            icon={<RowIcon name="shield" bg="#0ea5e9" />}
+            icon={<RowIcon name="shield" bg="#38BDF8" />}
             label="Two-Factor Authentication"
             value={twoFactor}
             onChange={setTwoFactor}
@@ -354,7 +299,7 @@ export default function SettingsScreen() {
             }
           />
           <Row
-            icon={<RowIcon name="file-text" bg="#6366f1" />}
+            icon={<RowIcon name="file-text" bg="#6C4FF5" />}
             label="Privacy Policy"
             onPress={() =>
               Alert.alert("Privacy Policy", "Privacy policy coming soon.")
@@ -386,7 +331,7 @@ export default function SettingsScreen() {
         <SectionHeader title="Currency & Language" />
         <Card>
           <Row
-            icon={<RowIcon name="dollar-sign" bg="#f59e0b" />}
+            icon={<RowIcon name="dollar-sign" bg="#F59E0B" />}
             label="Currency"
             value={currency}
             onPress={() =>
@@ -401,7 +346,7 @@ export default function SettingsScreen() {
             }
           />
           <Row
-            icon={<RowIcon name="globe" bg="#0ea5e9" />}
+            icon={<RowIcon name="globe" bg="#38BDF8" />}
             label="Language"
             value={language}
             onPress={() =>
@@ -425,134 +370,19 @@ export default function SettingsScreen() {
             }
           />
           <Row
-            icon={<RowIcon name="hash" bg="#6366f1" />}
+            icon={<RowIcon name="hash" bg="#6C4FF5" />}
             label="Number Format"
             value="en-IN (1,00,000)"
           />
         </Card>
-
-        {/* ── ABOUT ── */}
-        <SectionHeader title="About App" />
-        <Card>
-          <Row
-            icon={<RowIcon name="info" bg="#64748b" />}
-            label="Version"
-            right={
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Text style={{ fontSize: 13, color: colors.mutedForeground }}>
-                  1.0.0
-                </Text>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: colors.emeraldLight },
-                  ]}
-                >
-                  <Text style={[styles.badgeText, { color: colors.primary }]}>
-                    Latest
-                  </Text>
-                </View>
-              </View>
-            }
-          />
-          <Row
-            icon={<RowIcon name="file-text" bg="#0ea5e9" />}
-            label="Terms of Service"
-            onPress={() =>
-              Alert.alert("Terms", "Terms of service coming soon.")
-            }
-          />
-          <Row
-            icon={<RowIcon name="help-circle" bg="#f59e0b" />}
-            label="Help & Support"
-            onPress={() =>
-              Alert.alert("Support", "Contact support@saveony.app for help.")
-            }
-          />
-        </Card>
-
-        {/* ── LOGOUT ── */}
-        <SectionHeader title="Account" />
-        <Card>
-          <Row
-            icon={<RowIcon name="log-out" bg="#ef4444" />}
-            label="Sign Out"
-            danger
-            onPress={() => setShowLogoutModal(true)}
-          />
-        </Card>
       </ScrollView>
-
-      {/* Logout modal */}
-      <Modal
-        visible={showLogoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLogoutModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View
-            style={[
-              styles.modalCard,
-              { backgroundColor: colors.card, borderColor: colors.border },
-            ]}
-          >
-            <View
-              style={[
-                styles.modalIconWrap,
-                { backgroundColor: "#fef2f2" },
-              ]}
-            >
-              <Feather name="log-out" size={28} color="#ef4444" />
-            </View>
-            <Text
-              style={[styles.modalTitle, { color: colors.foreground }]}
-            >
-              Sign out?
-            </Text>
-            <Text
-              style={[styles.modalBody, { color: colors.mutedForeground }]}
-            >
-              You'll need to sign back in with your email OTP to access your
-              finances.
-            </Text>
-            <TouchableOpacity
-              style={styles.modalLogoutBtn}
-              onPress={handleLogout}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.modalLogoutText}>Yes, Sign Out</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.modalCancelBtn,
-                { borderColor: colors.border, backgroundColor: colors.secondary },
-              ]}
-              onPress={() => setShowLogoutModal(false)}
-              activeOpacity={0.75}
-            >
-              <Text
-                style={[styles.modalCancelText, { color: colors.foreground }]}
-              >
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  content: { paddingHorizontal: 16 },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 20,
-    fontFamily: "Inter_700Bold",
-  },
+  content: { padding: 16 },
   sectionHeader: {
     fontSize: 11,
     fontWeight: "600",
@@ -567,43 +397,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  divider: { height: 1, marginHorizontal: 16 },
-
-  // Profile
-  profileRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    gap: 14,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#fff",
-    fontFamily: "Inter_700Bold",
-  },
-  profileInfo: { flex: 1, gap: 2 },
-  profileName: {
-    fontSize: 17,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-  },
-  profileEmail: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  badge: {
-    alignSelf: "flex-start",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginTop: 4,
-  },
-  badgeText: { fontSize: 11, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
 
   // Rows
   row: {
@@ -649,63 +442,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
-
-  // Logout modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 360,
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 24,
-    alignItems: "center",
-    gap: 12,
-  },
-  modalIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    fontFamily: "Inter_700Bold",
-  },
-  modalBody: {
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 20,
-    fontFamily: "Inter_400Regular",
-  },
-  modalLogoutBtn: {
-    width: "100%",
-    backgroundColor: "#ef4444",
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  modalLogoutText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
-  },
-  modalCancelBtn: {
-    width: "100%",
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  modalCancelText: { fontSize: 15, fontWeight: "500", fontFamily: "Inter_500Medium" },
 });
