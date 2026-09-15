@@ -9,7 +9,7 @@ import {
   useListTransactions,
 } from "@workspace/api-client-react";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   ActivityIndicator,
   Platform,
@@ -21,6 +21,9 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInDown, FadeInUp, Layout } from "react-native-reanimated";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -28,18 +31,6 @@ const fmt = (n?: number) =>
   n !== undefined ? `₹${new Intl.NumberFormat("en-IN").format(Math.round(n))}` : "₹0";
 
 const CHART_COLORS = ["#1db970", "#0ea5e9", "#6366f1", "#f59e0b", "#f43f5e"];
-
-const CATEGORY_ICONS: Record<string, string> = {
-  Food: "coffee",
-  Transport: "navigation",
-  Housing: "home",
-  Entertainment: "film",
-  Health: "heart",
-  Shopping: "shopping-bag",
-  Utilities: "zap",
-  Income: "arrow-down-circle",
-  Other: "more-horizontal",
-};
 
 function getInitials(name: string) {
   return name.slice(0, 2).toUpperCase();
@@ -73,6 +64,7 @@ export default function DashboardScreen() {
   const recentTxns = safeTransactions.slice(-5).reverse();
 
   const onRefresh = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetExpenseBreakdownQueryKey() }),
@@ -81,87 +73,113 @@ export default function DashboardScreen() {
   };
 
   const topPad = isWeb ? 67 : insets.top;
-
   const styles = makeStyles(colors);
 
   return (
     <ScrollView
-      style={[styles.container]}
+      style={styles.container}
       contentContainerStyle={{ paddingBottom: isWeb ? 34 : insets.bottom + 90 }}
       refreshControl={<RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={colors.primary} />}
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <View style={[styles.header, { paddingTop: topPad + 16 }]}>
+      <Animated.View entering={FadeInDown.delay(100)} style={[styles.header, { paddingTop: topPad + 16 }]}>
         <View>
           <Text style={styles.headerGreeting}>Good {getDayName()}</Text>
           <Text style={styles.headerDate}>{getFormattedDate()}</Text>
         </View>
-        <TouchableOpacity style={styles.bellBtn}>
+        <TouchableOpacity
+          style={styles.bellBtn}
+          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        >
           <Feather name="bell" size={22} color={colors.foreground} />
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
       {/* Net Worth Hero Card */}
-      <View style={styles.heroCard}>
-        <Text style={styles.heroLabel}>TOTAL NET WORTH</Text>
-        {sumLoading ? (
-          <ActivityIndicator color={colors.primary} style={{ marginVertical: 12 }} />
-        ) : (
-          <>
-            <Text style={styles.heroAmount}>{fmt(summary?.netWorth)}</Text>
-            <View style={styles.heroRow}>
-              <View style={[styles.chip, { backgroundColor: colors.emeraldLight }]}>
-                <Feather name="trending-up" size={12} color={colors.primary} />
-                <Text style={[styles.chipText, { color: colors.primary }]}>
-                  {(summary?.portfolioReturnPercent ?? 0) >= 0 ? "+" : ""}
-                  {(summary?.portfolioReturnPercent ?? 0).toFixed(1)}% portfolio
-                </Text>
-              </View>
-            </View>
-          </>
-        )}
-      </View>
+      <Animated.View entering={FadeInDown.delay(200)}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => Haptics.selectionAsync()}>
+          <LinearGradient
+            colors={[colors.primary, "#0ea5e9"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.heroCard}
+          >
+            <Text style={styles.heroLabel}>TOTAL NET WORTH</Text>
+            {sumLoading ? (
+              <ActivityIndicator color="#ffffff" style={{ marginVertical: 12 }} />
+            ) : (
+              <>
+                <Text style={styles.heroAmount}>{fmt(summary?.netWorth)}</Text>
+                <View style={styles.heroRow}>
+                  <View style={styles.chip}>
+                    <Feather name="trending-up" size={14} color="#ffffff" />
+                    <Text style={styles.chipText}>
+                      {(summary?.portfolioReturnPercent ?? 0) >= 0 ? "+" : ""}
+                      {(summary?.portfolioReturnPercent ?? 0).toFixed(1)}% portfolio
+                    </Text>
+                  </View>
+                </View>
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Stats Row */}
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { flex: 1 }]}>
+      <Animated.View entering={FadeInDown.delay(300)} style={styles.statsRow}>
+        <TouchableOpacity
+          style={[styles.statCard, { flex: 1 }]}
+          activeOpacity={0.7}
+          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        >
           <View style={[styles.statIcon, { backgroundColor: colors.emeraldLight }]}>
-            <Feather name="arrow-down-circle" size={14} color={colors.primary} />
+            <Feather name="arrow-down-circle" size={16} color={colors.primary} />
           </View>
           <Text style={styles.statLabel}>Income</Text>
           <Text style={[styles.statValue, { color: colors.primary }]}>{fmt(summary?.monthlyIncome)}</Text>
-        </View>
-        <View style={[styles.statCard, { flex: 1 }]}>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.statCard, { flex: 1 }]}
+          activeOpacity={0.7}
+          onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+        >
           <View style={[styles.statIcon, { backgroundColor: colors.roseLight }]}>
-            <Feather name="arrow-up-circle" size={14} color="#f43f5e" />
+            <Feather name="arrow-up-circle" size={16} color="#f43f5e" />
           </View>
           <Text style={styles.statLabel}>Expenses</Text>
           <Text style={[styles.statValue, { color: "#f43f5e" }]}>{fmt(summary?.monthlyExpenses)}</Text>
-        </View>
-        <View style={[styles.statCard, { flex: 1 }]}>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.statCard, { flex: 1 }]}
+          activeOpacity={0.7}
+          onPress={() => router.push("/(tabs)/savings")}
+        >
           <View style={[styles.statIcon, { backgroundColor: colors.skyLight }]}>
-            <Feather name="percent" size={14} color="#0ea5e9" />
+            <Feather name="percent" size={16} color="#0ea5e9" />
           </View>
           <Text style={styles.statLabel}>Saved</Text>
           <Text style={[styles.statValue, { color: "#0ea5e9" }]}>
             {(summary?.savingsRate ?? 0).toFixed(0)}%
           </Text>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </Animated.View>
 
       {/* Expense Breakdown */}
       {Array.isArray(breakdown) && breakdown.length > 0 && (
-        <View style={styles.section}>
+        <Animated.View entering={FadeInUp.delay(400)} style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>This Month</Text>
+            <Text style={styles.sectionTitle}>This Month's Spending</Text>
           </View>
           {breakdown.slice(0, 5).map((item, i) => (
             <View key={item.category} style={styles.breakdownRow}>
               <View style={[styles.dot, { backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }]} />
               <Text style={styles.breakdownLabel}>{item.category}</Text>
               <View style={styles.breakdownBar}>
-                <View
+                <Animated.View
+                  entering={FadeInDown.delay(500 + i * 100)}
                   style={[
                     styles.breakdownFill,
                     {
@@ -174,41 +192,59 @@ export default function DashboardScreen() {
               <Text style={styles.breakdownAmt}>{fmt(item.total)}</Text>
             </View>
           ))}
-        </View>
+        </Animated.View>
       )}
 
       {/* Recent Transactions */}
-      <View style={styles.section}>
+      <Animated.View entering={FadeInUp.delay(500)} style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent</Text>
-          <TouchableOpacity onPress={() => router.push("/(tabs)/transactions")}>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          <TouchableOpacity
+            onPress={() => {
+              Haptics.selectionAsync();
+              router.push("/(tabs)/transactions");
+            }}
+          >
             <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
           </TouchableOpacity>
         </View>
+
         {recentTxns.length === 0 ? (
           <View style={styles.emptyState}>
             <Feather name="inbox" size={32} color={colors.mutedForeground} />
             <Text style={styles.emptyText}>No transactions yet</Text>
+            <TouchableOpacity
+              style={styles.emptyBtn}
+              onPress={() => router.push("/(tabs)/transactions")}
+            >
+              <Text style={styles.emptyBtnText}>Add your first</Text>
+            </TouchableOpacity>
           </View>
         ) : (
-          recentTxns.map((txn) => (
-            <View key={txn.id} style={styles.txnRow}>
-              <View style={[styles.avatar, { backgroundColor: txn.isIncome ? colors.emeraldLight : colors.secondary }]}>
-                <Text style={[styles.avatarText, { color: txn.isIncome ? colors.primary : colors.mutedForeground }]}>
-                  {getInitials(txn.merchant)}
+          recentTxns.map((txn, idx) => (
+            <Animated.View key={txn.id} entering={FadeInDown.delay(600 + idx * 50)}>
+              <TouchableOpacity
+                style={styles.txnRow}
+                activeOpacity={0.6}
+                onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              >
+                <View style={[styles.avatar, { backgroundColor: txn.isIncome ? colors.emeraldLight : colors.secondary }]}>
+                  <Text style={[styles.avatarText, { color: txn.isIncome ? colors.primary : colors.mutedForeground }]}>
+                    {getInitials(txn.merchant)}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.txnMerchant} numberOfLines={1}>{txn.merchant}</Text>
+                  <Text style={styles.txnCategory}>{txn.category}</Text>
+                </View>
+                <Text style={[styles.txnAmount, { color: txn.isIncome ? colors.primary : colors.foreground }]}>
+                  {txn.isIncome ? "+" : "-"}{fmt(txn.amount)}
                 </Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.txnMerchant} numberOfLines={1}>{txn.merchant}</Text>
-                <Text style={styles.txnCategory}>{txn.category}</Text>
-              </View>
-              <Text style={[styles.txnAmount, { color: txn.isIncome ? colors.primary : colors.foreground }]}>
-                {txn.isIncome ? "+" : "-"}{fmt(txn.amount)}
-              </Text>
-            </View>
+              </TouchableOpacity>
+            </Animated.View>
           ))
         )}
-      </View>
+      </Animated.View>
     </ScrollView>
   );
 }
@@ -222,183 +258,215 @@ function makeStyles(colors: ReturnType<typeof useColors>) {
       alignItems: "center",
       paddingHorizontal: 20,
       paddingBottom: 16,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      backgroundColor: colors.background,
     },
     headerGreeting: {
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: "700",
       color: colors.foreground,
       fontFamily: "Inter_700Bold",
     },
     headerDate: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.mutedForeground,
       marginTop: 2,
       fontFamily: "Inter_400Regular",
     },
     bellBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.secondary,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.card,
       alignItems: "center",
       justifyContent: "center",
-    },
-    heroCard: {
-      margin: 16,
-      padding: 20,
-      backgroundColor: colors.card,
-      borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    heroCard: {
+      marginHorizontal: 16,
+      marginBottom: 16,
+      padding: 24,
+      borderRadius: 20,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
     },
     heroLabel: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: "600",
-      color: colors.mutedForeground,
+      color: "rgba(255, 255, 255, 0.8)",
       letterSpacing: 1.2,
       fontFamily: "Inter_600SemiBold",
     },
     heroAmount: {
-      fontSize: 38,
+      fontSize: 42,
       fontWeight: "700",
-      color: colors.foreground,
-      marginTop: 4,
+      color: "#ffffff",
+      marginTop: 6,
       fontFamily: "Inter_700Bold",
     },
-    heroRow: { flexDirection: "row", marginTop: 8, gap: 8 },
+    heroRow: { flexDirection: "row", marginTop: 12, gap: 8 },
     chip: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      paddingHorizontal: 12,
+      paddingVertical: 6,
       borderRadius: 20,
-      gap: 4,
+      gap: 6,
     },
-    chipText: { fontSize: 12, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+    chipText: { fontSize: 13, fontWeight: "600", color: "#ffffff", fontFamily: "Inter_600SemiBold" },
     statsRow: {
       flexDirection: "row",
-      gap: 8,
+      gap: 12,
       marginHorizontal: 16,
-      marginBottom: 16,
+      marginBottom: 20,
     },
     statCard: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.border,
-      padding: 12,
-    },
-    statIcon: {
-      width: 28,
-      height: 28,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 6,
-    },
-    statLabel: {
-      fontSize: 11,
-      color: colors.mutedForeground,
-      fontFamily: "Inter_400Regular",
-      marginBottom: 2,
-    },
-    statValue: {
-      fontSize: 14,
-      fontWeight: "700",
-      fontFamily: "Inter_700Bold",
-    },
-    section: {
-      marginHorizontal: 16,
-      marginBottom: 16,
       backgroundColor: colors.card,
       borderRadius: 16,
       borderWidth: 1,
       borderColor: colors.border,
       padding: 16,
+      alignItems: "flex-start",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    statIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    statLabel: {
+      fontSize: 12,
+      color: colors.mutedForeground,
+      fontFamily: "Inter_400Regular",
+      marginBottom: 4,
+    },
+    statValue: {
+      fontSize: 15,
+      fontWeight: "700",
+      fontFamily: "Inter_700Bold",
+    },
+    section: {
+      marginHorizontal: 16,
+      marginBottom: 20,
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.03,
+      shadowRadius: 8,
+      elevation: 3,
     },
     sectionHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: 16,
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: "700",
       color: colors.foreground,
       fontFamily: "Inter_700Bold",
     },
-    seeAll: { fontSize: 13, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
+    seeAll: { fontSize: 14, fontWeight: "600", fontFamily: "Inter_600SemiBold" },
     breakdownRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
-      marginBottom: 10,
+      gap: 10,
+      marginBottom: 12,
     },
-    dot: { width: 8, height: 8, borderRadius: 4 },
+    dot: { width: 10, height: 10, borderRadius: 5 },
     breakdownLabel: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.foreground,
-      width: 80,
-      fontFamily: "Inter_400Regular",
+      width: 90,
+      fontFamily: "Inter_500Medium",
     },
     breakdownBar: {
       flex: 1,
-      height: 6,
+      height: 8,
       backgroundColor: colors.secondary,
-      borderRadius: 3,
+      borderRadius: 4,
       overflow: "hidden",
     },
-    breakdownFill: { height: "100%", borderRadius: 3 },
+    breakdownFill: { height: "100%", borderRadius: 4 },
     breakdownAmt: {
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: "600",
       color: colors.foreground,
-      minWidth: 60,
+      minWidth: 65,
       textAlign: "right",
       fontFamily: "Inter_600SemiBold",
     },
     txnRow: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
-      paddingVertical: 8,
+      gap: 14,
+      paddingVertical: 10,
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },
     avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       alignItems: "center",
       justifyContent: "center",
     },
-    avatarText: { fontSize: 13, fontWeight: "700", fontFamily: "Inter_700Bold" },
+    avatarText: { fontSize: 14, fontWeight: "700", fontFamily: "Inter_700Bold" },
     txnMerchant: {
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: "600",
       color: colors.foreground,
       fontFamily: "Inter_600SemiBold",
     },
     txnCategory: {
-      fontSize: 12,
+      fontSize: 13,
       color: colors.mutedForeground,
-      marginTop: 1,
+      marginTop: 2,
       fontFamily: "Inter_400Regular",
     },
     txnAmount: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: "700",
       fontFamily: "Inter_700Bold",
     },
-    emptyState: { alignItems: "center", paddingVertical: 20, gap: 8 },
+    emptyState: { alignItems: "center", paddingVertical: 24, gap: 10 },
     emptyText: {
-      fontSize: 14,
+      fontSize: 15,
       color: colors.mutedForeground,
       fontFamily: "Inter_400Regular",
     },
+    emptyBtn: {
+      marginTop: 8,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+    },
+    emptyBtnText: {
+      color: "#fff",
+      fontWeight: "600",
+      fontFamily: "Inter_600SemiBold",
+    }
   });
 }
