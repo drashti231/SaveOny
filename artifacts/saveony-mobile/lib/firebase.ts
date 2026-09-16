@@ -1,6 +1,5 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
-import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGic6MHfCktfR9z5QSM9HdhMzjZRW5nFI",
@@ -11,16 +10,11 @@ const firebaseConfig = {
   appId: "1:491206246362:web:27ae60798b7a6796140ae3"
 };
 
-// Initialize Firebase
+// Initialize Firebase (guard against double initialization in Expo hot reload)
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-let auth: ReturnType<typeof getAuth>;
-try {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
-} catch (error) {
-  auth = getAuth(app);
-}
+// Use standard getAuth — works reliably with Expo + Firebase v12
+// Firebase automatically handles session persistence via AsyncStorage in RN enviroment
+const auth = getAuth(app);
 
 export { app, auth };

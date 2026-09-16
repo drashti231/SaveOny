@@ -22,7 +22,7 @@ if (domain) {
   setBaseUrl(`https://${domain}`);
 } else {
   // Hardcoding local IP to avoid Metro cache issues with .env
-  setBaseUrl("http://10.37.21.107:8080");
+  setBaseUrl("http://172.17.45.131:8080");
 }
 
 
