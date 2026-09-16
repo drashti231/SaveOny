@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, investmentsTable } from "@workspace/db";
+import { InvestmentModel } from "@workspace/db";
 import {
   CreateInvestmentBody,
   UpdateInvestmentParams,
@@ -11,22 +10,18 @@ import {
 
 const router: IRouter = Router();
 
-const mapInvestment = (r: typeof investmentsTable.$inferSelect) => ({
+const mapInvestment = (r: any) => ({
   id: r.id,
   ticker: r.ticker,
   name: r.name,
-  value: parseFloat(r.value),
-  allocationPercent: parseFloat(r.allocationPercent),
-  dayChangePercent: parseFloat(r.dayChangePercent),
+  value: r.value,
+  allocationPercent: r.allocationPercent,
+  dayChangePercent: r.dayChangePercent,
   createdAt: r.createdAt.toISOString(),
 });
 
 router.get("/investments", async (_req, res): Promise<void> => {
-  const rows = await db
-    .select()
-    .from(investmentsTable)
-    .orderBy(investmentsTable.createdAt);
-
+  const rows = await InvestmentModel.find().sort({ createdAt: 1 });
   res.json(ListInvestmentsResponse.parse(rows.map(mapInvestment)));
 });
 
@@ -37,23 +32,20 @@ router.post("/investments", async (req, res): Promise<void> => {
     return;
   }
 
-  const [row] = await db
-    .insert(investmentsTable)
-    .values({
-      ticker: parsed.data.ticker,
-      name: parsed.data.name,
-      value: String(parsed.data.value),
-      allocationPercent: String(parsed.data.allocationPercent),
-      dayChangePercent: String(parsed.data.dayChangePercent),
-    })
-    .returning();
+  const row = await InvestmentModel.create({
+    ticker: parsed.data.ticker,
+    name: parsed.data.name,
+    value: parsed.data.value,
+    allocationPercent: parsed.data.allocationPercent,
+    dayChangePercent: parsed.data.dayChangePercent,
+  });
 
   res.status(201).json(mapInvestment(row));
 });
 
 router.patch("/investments/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = UpdateInvestmentParams.safeParse({ id: parseInt(raw, 10) });
+  const params = UpdateInvestmentParams.safeParse({ id: raw });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
@@ -65,18 +57,14 @@ router.patch("/investments/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const updates: Record<string, string> = {};
+  const updates: Record<string, any> = {};
   if (parsed.data.ticker !== undefined) updates.ticker = parsed.data.ticker;
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
-  if (parsed.data.value !== undefined) updates.value = String(parsed.data.value);
-  if (parsed.data.allocationPercent !== undefined) updates.allocationPercent = String(parsed.data.allocationPercent);
-  if (parsed.data.dayChangePercent !== undefined) updates.dayChangePercent = String(parsed.data.dayChangePercent);
+  if (parsed.data.value !== undefined) updates.value = parsed.data.value;
+  if (parsed.data.allocationPercent !== undefined) updates.allocationPercent = parsed.data.allocationPercent;
+  if (parsed.data.dayChangePercent !== undefined) updates.dayChangePercent = parsed.data.dayChangePercent;
 
-  const [row] = await db
-    .update(investmentsTable)
-    .set(updates)
-    .where(eq(investmentsTable.id, params.data.id))
-    .returning();
+  const row = await InvestmentModel.findByIdAndUpdate(params.data.id, updates, { new: true });
 
   if (!row) {
     res.status(404).json({ error: "Investment not found" });
@@ -88,16 +76,13 @@ router.patch("/investments/:id", async (req, res): Promise<void> => {
 
 router.delete("/investments/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = DeleteInvestmentParams.safeParse({ id: parseInt(raw, 10) });
+  const params = DeleteInvestmentParams.safeParse({ id: raw });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const [row] = await db
-    .delete(investmentsTable)
-    .where(eq(investmentsTable.id, params.data.id))
-    .returning();
+  const row = await InvestmentModel.findByIdAndDelete(params.data.id);
 
   if (!row) {
     res.status(404).json({ error: "Investment not found" });

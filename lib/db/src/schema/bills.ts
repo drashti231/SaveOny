@@ -1,12 +1,32 @@
-import { pgTable, serial, text, timestamp, varchar, integer, boolean } from "drizzle-orm/pg-core";
+import mongoose, { Document, Schema } from 'mongoose';
 
-export const bills = pgTable("bills", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 255 }).notNull(),
-  name: text("name").notNull(),
-  amount: integer("amount").notNull(),
-  dueDate: text("due_date").notNull(),
-  isPaid: boolean("is_paid").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export interface IBill extends Document {
+  userId: string;
+  name: string;
+  amount: number;
+  dueDate: string;
+  isPaid: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const billSchema = new Schema<IBill>({
+  userId: { type: String, required: true },
+  name: { type: String, required: true },
+  amount: { type: Number, required: true },
+  dueDate: { type: String, required: true },
+  isPaid: { type: Boolean, required: true, default: false },
+  createdAt: { type: Date, required: true, default: Date.now },
+  updatedAt: { type: Date, required: true, default: Date.now }
+}, {
+  timestamps: false,
+  toJSON: {
+    transform: function (doc, ret: any) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+    }
+  }
 });
+
+export const BillModel = mongoose.models.Bill || mongoose.model<IBill>('Bill', billSchema);

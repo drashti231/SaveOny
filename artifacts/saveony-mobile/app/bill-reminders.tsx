@@ -32,7 +32,7 @@ export default function BillRemindersScreen() {
 
   const displayBills = tab === "upcoming" ? upcomingBills : pastBills;
 
-  const handlePay = (id: number) => {
+  const handlePay = (id: string) => {
     updateBill.mutate({ id, data: { isPaid: true } }, {
       onSuccess: () => {
         Alert.alert("Success", "Bill marked as paid!");

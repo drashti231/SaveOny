@@ -48,7 +48,7 @@ export default function SavingsScreen() {
   const queryClient = useQueryClient();
 
   const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<GoalForm>(emptyForm());
   const [formError, setFormError] = useState("");
 
@@ -103,7 +103,7 @@ export default function SavingsScreen() {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     Alert.alert("Delete Goal", "Remove this savings goal?", [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
@@ -131,7 +131,7 @@ export default function SavingsScreen() {
       ) : (
         <FlatList
           data={safeGoals}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 12,

@@ -291,12 +291,12 @@ export const useCreateTransaction = <
 /**
  * @summary Delete a transaction
  */
-export const getDeleteTransactionUrl = (id: number) => {
+export const getDeleteTransactionUrl = (id: string) => {
   return `/api/transactions/${id}`;
 };
 
 export const deleteTransaction = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteTransactionUrl(id), {
@@ -312,14 +312,14 @@ export const getDeleteTransactionMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteTransaction>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteTransaction>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteTransaction"];
@@ -333,7 +333,7 @@ export const getDeleteTransactionMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteTransaction>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -359,14 +359,14 @@ export const useDeleteTransaction = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteTransaction>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteTransaction>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteTransactionMutationOptions(options));
@@ -536,12 +536,12 @@ export const useCreateSavingsGoal = <
 /**
  * @summary Update a savings goal (name, target, or current amount)
  */
-export const getUpdateSavingsGoalUrl = (id: number) => {
+export const getUpdateSavingsGoalUrl = (id: string) => {
   return `/api/savings-goals/${id}`;
 };
 
 export const updateSavingsGoal = async (
-  id: number,
+  id: string,
   savingsGoalUpdate: SavingsGoalUpdate,
   options?: RequestInit,
 ): Promise<SavingsGoal> => {
@@ -560,14 +560,14 @@ export const getUpdateSavingsGoalMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateSavingsGoal>>,
     TError,
-    { id: number; data: BodyType<SavingsGoalUpdate> },
+    { id: string; data: BodyType<SavingsGoalUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateSavingsGoal>>,
   TError,
-  { id: number; data: BodyType<SavingsGoalUpdate> },
+  { id: string; data: BodyType<SavingsGoalUpdate> },
   TContext
 > => {
   const mutationKey = ["updateSavingsGoal"];
@@ -581,7 +581,7 @@ export const getUpdateSavingsGoalMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateSavingsGoal>>,
-    { id: number; data: BodyType<SavingsGoalUpdate> }
+    { id: string; data: BodyType<SavingsGoalUpdate> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -607,14 +607,14 @@ export const useUpdateSavingsGoal = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateSavingsGoal>>,
     TError,
-    { id: number; data: BodyType<SavingsGoalUpdate> },
+    { id: string; data: BodyType<SavingsGoalUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateSavingsGoal>>,
   TError,
-  { id: number; data: BodyType<SavingsGoalUpdate> },
+  { id: string; data: BodyType<SavingsGoalUpdate> },
   TContext
 > => {
   return useMutation(getUpdateSavingsGoalMutationOptions(options));
@@ -623,12 +623,12 @@ export const useUpdateSavingsGoal = <
 /**
  * @summary Delete a savings goal
  */
-export const getDeleteSavingsGoalUrl = (id: number) => {
+export const getDeleteSavingsGoalUrl = (id: string) => {
   return `/api/savings-goals/${id}`;
 };
 
 export const deleteSavingsGoal = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteSavingsGoalUrl(id), {
@@ -644,14 +644,14 @@ export const getDeleteSavingsGoalMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteSavingsGoal>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteSavingsGoal>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteSavingsGoal"];
@@ -665,7 +665,7 @@ export const getDeleteSavingsGoalMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteSavingsGoal>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -691,14 +691,14 @@ export const useDeleteSavingsGoal = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteSavingsGoal>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteSavingsGoal>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteSavingsGoalMutationOptions(options));
@@ -868,12 +868,12 @@ export const useCreateInvestment = <
 /**
  * @summary Update an investment holding value or change
  */
-export const getUpdateInvestmentUrl = (id: number) => {
+export const getUpdateInvestmentUrl = (id: string) => {
   return `/api/investments/${id}`;
 };
 
 export const updateInvestment = async (
-  id: number,
+  id: string,
   investmentUpdate: InvestmentUpdate,
   options?: RequestInit,
 ): Promise<Investment> => {
@@ -892,14 +892,14 @@ export const getUpdateInvestmentMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateInvestment>>,
     TError,
-    { id: number; data: BodyType<InvestmentUpdate> },
+    { id: string; data: BodyType<InvestmentUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateInvestment>>,
   TError,
-  { id: number; data: BodyType<InvestmentUpdate> },
+  { id: string; data: BodyType<InvestmentUpdate> },
   TContext
 > => {
   const mutationKey = ["updateInvestment"];
@@ -913,7 +913,7 @@ export const getUpdateInvestmentMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateInvestment>>,
-    { id: number; data: BodyType<InvestmentUpdate> }
+    { id: string; data: BodyType<InvestmentUpdate> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -939,14 +939,14 @@ export const useUpdateInvestment = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateInvestment>>,
     TError,
-    { id: number; data: BodyType<InvestmentUpdate> },
+    { id: string; data: BodyType<InvestmentUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateInvestment>>,
   TError,
-  { id: number; data: BodyType<InvestmentUpdate> },
+  { id: string; data: BodyType<InvestmentUpdate> },
   TContext
 > => {
   return useMutation(getUpdateInvestmentMutationOptions(options));
@@ -955,12 +955,12 @@ export const useUpdateInvestment = <
 /**
  * @summary Delete an investment holding
  */
-export const getDeleteInvestmentUrl = (id: number) => {
+export const getDeleteInvestmentUrl = (id: string) => {
   return `/api/investments/${id}`;
 };
 
 export const deleteInvestment = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteInvestmentUrl(id), {
@@ -976,14 +976,14 @@ export const getDeleteInvestmentMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteInvestment>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteInvestment>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteInvestment"];
@@ -997,7 +997,7 @@ export const getDeleteInvestmentMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteInvestment>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -1023,14 +1023,14 @@ export const useDeleteInvestment = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteInvestment>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteInvestment>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteInvestmentMutationOptions(options));
@@ -1348,12 +1348,12 @@ export const useCreateBudget = <
 /**
  * @summary Delete a budget
  */
-export const getDeleteBudgetUrl = (id: number) => {
+export const getDeleteBudgetUrl = (id: string) => {
   return `/api/budgets/${id}`;
 };
 
 export const deleteBudget = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteBudgetUrl(id), {
@@ -1369,14 +1369,14 @@ export const getDeleteBudgetMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteBudget>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteBudget>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteBudget"];
@@ -1390,7 +1390,7 @@ export const getDeleteBudgetMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteBudget>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -1416,14 +1416,14 @@ export const useDeleteBudget = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteBudget>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteBudget>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteBudgetMutationOptions(options));
@@ -1583,12 +1583,12 @@ export const useCreateBill = <
 /**
  * @summary Update a bill (e.g., mark as paid)
  */
-export const getUpdateBillUrl = (id: number) => {
+export const getUpdateBillUrl = (id: string) => {
   return `/api/bills/${id}`;
 };
 
 export const updateBill = async (
-  id: number,
+  id: string,
   billUpdate: BillUpdate,
   options?: RequestInit,
 ): Promise<Bill> => {
@@ -1607,14 +1607,14 @@ export const getUpdateBillMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateBill>>,
     TError,
-    { id: number; data: BodyType<BillUpdate> },
+    { id: string; data: BodyType<BillUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateBill>>,
   TError,
-  { id: number; data: BodyType<BillUpdate> },
+  { id: string; data: BodyType<BillUpdate> },
   TContext
 > => {
   const mutationKey = ["updateBill"];
@@ -1628,7 +1628,7 @@ export const getUpdateBillMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateBill>>,
-    { id: number; data: BodyType<BillUpdate> }
+    { id: string; data: BodyType<BillUpdate> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -1654,14 +1654,14 @@ export const useUpdateBill = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateBill>>,
     TError,
-    { id: number; data: BodyType<BillUpdate> },
+    { id: string; data: BodyType<BillUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateBill>>,
   TError,
-  { id: number; data: BodyType<BillUpdate> },
+  { id: string; data: BodyType<BillUpdate> },
   TContext
 > => {
   return useMutation(getUpdateBillMutationOptions(options));
@@ -1670,12 +1670,12 @@ export const useUpdateBill = <
 /**
  * @summary Delete a bill
  */
-export const getDeleteBillUrl = (id: number) => {
+export const getDeleteBillUrl = (id: string) => {
   return `/api/bills/${id}`;
 };
 
 export const deleteBill = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteBillUrl(id), {
@@ -1691,14 +1691,14 @@ export const getDeleteBillMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteBill>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteBill>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteBill"];
@@ -1712,7 +1712,7 @@ export const getDeleteBillMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteBill>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -1738,14 +1738,14 @@ export const useDeleteBill = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteBill>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteBill>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteBillMutationOptions(options));
@@ -2014,12 +2014,12 @@ export const useCreateOpenaiConversation = <
 /**
  * @summary Get conversation with messages
  */
-export const getGetOpenaiConversationUrl = (id: number) => {
+export const getGetOpenaiConversationUrl = (id: string) => {
   return `/api/openai/conversations/${id}`;
 };
 
 export const getOpenaiConversation = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<OpenaiConversationWithMessages> => {
   return customFetch<OpenaiConversationWithMessages>(
@@ -2031,7 +2031,7 @@ export const getOpenaiConversation = async (
   );
 };
 
-export const getGetOpenaiConversationQueryKey = (id: number) => {
+export const getGetOpenaiConversationQueryKey = (id: string) => {
   return [`/api/openai/conversations/${id}`] as const;
 };
 
@@ -2039,7 +2039,7 @@ export const getGetOpenaiConversationQueryOptions = <
   TData = Awaited<ReturnType<typeof getOpenaiConversation>>,
   TError = ErrorType<OpenaiError>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getOpenaiConversation>>,
@@ -2083,7 +2083,7 @@ export function useGetOpenaiConversation<
   TData = Awaited<ReturnType<typeof getOpenaiConversation>>,
   TError = ErrorType<OpenaiError>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof getOpenaiConversation>>,
@@ -2105,12 +2105,12 @@ export function useGetOpenaiConversation<
 /**
  * @summary Delete a conversation
  */
-export const getDeleteOpenaiConversationUrl = (id: number) => {
+export const getDeleteOpenaiConversationUrl = (id: string) => {
   return `/api/openai/conversations/${id}`;
 };
 
 export const deleteOpenaiConversation = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<void> => {
   return customFetch<void>(getDeleteOpenaiConversationUrl(id), {
@@ -2126,14 +2126,14 @@ export const getDeleteOpenaiConversationMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteOpenaiConversation>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof deleteOpenaiConversation>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   const mutationKey = ["deleteOpenaiConversation"];
@@ -2147,7 +2147,7 @@ export const getDeleteOpenaiConversationMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof deleteOpenaiConversation>>,
-    { id: number }
+    { id: string }
   > = (props) => {
     const { id } = props ?? {};
 
@@ -2173,14 +2173,14 @@ export const useDeleteOpenaiConversation = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof deleteOpenaiConversation>>,
     TError,
-    { id: number },
+    { id: string },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof deleteOpenaiConversation>>,
   TError,
-  { id: number },
+  { id: string },
   TContext
 > => {
   return useMutation(getDeleteOpenaiConversationMutationOptions(options));
@@ -2189,12 +2189,12 @@ export const useDeleteOpenaiConversation = <
 /**
  * @summary List messages in a conversation
  */
-export const getListOpenaiMessagesUrl = (id: number) => {
+export const getListOpenaiMessagesUrl = (id: string) => {
   return `/api/openai/conversations/${id}/messages`;
 };
 
 export const listOpenaiMessages = async (
-  id: number,
+  id: string,
   options?: RequestInit,
 ): Promise<OpenaiMessage[]> => {
   return customFetch<OpenaiMessage[]>(getListOpenaiMessagesUrl(id), {
@@ -2203,7 +2203,7 @@ export const listOpenaiMessages = async (
   });
 };
 
-export const getListOpenaiMessagesQueryKey = (id: number) => {
+export const getListOpenaiMessagesQueryKey = (id: string) => {
   return [`/api/openai/conversations/${id}/messages`] as const;
 };
 
@@ -2211,7 +2211,7 @@ export const getListOpenaiMessagesQueryOptions = <
   TData = Awaited<ReturnType<typeof listOpenaiMessages>>,
   TError = ErrorType<unknown>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listOpenaiMessages>>,
@@ -2254,7 +2254,7 @@ export function useListOpenaiMessages<
   TData = Awaited<ReturnType<typeof listOpenaiMessages>>,
   TError = ErrorType<unknown>,
 >(
-  id: number,
+  id: string,
   options?: {
     query?: UseQueryOptions<
       Awaited<ReturnType<typeof listOpenaiMessages>>,
@@ -2276,12 +2276,12 @@ export function useListOpenaiMessages<
 /**
  * @summary Send a message and receive a streaming AI response
  */
-export const getSendOpenaiMessageUrl = (id: number) => {
+export const getSendOpenaiMessageUrl = (id: string) => {
   return `/api/openai/conversations/${id}/messages`;
 };
 
 export const sendOpenaiMessage = async (
-  id: number,
+  id: string,
   sendOpenaiMessageBody: SendOpenaiMessageBody,
   options?: RequestInit,
 ): Promise<unknown> => {
@@ -2300,14 +2300,14 @@ export const getSendOpenaiMessageMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof sendOpenaiMessage>>,
     TError,
-    { id: number; data: BodyType<SendOpenaiMessageBody> },
+    { id: string; data: BodyType<SendOpenaiMessageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof sendOpenaiMessage>>,
   TError,
-  { id: number; data: BodyType<SendOpenaiMessageBody> },
+  { id: string; data: BodyType<SendOpenaiMessageBody> },
   TContext
 > => {
   const mutationKey = ["sendOpenaiMessage"];
@@ -2321,7 +2321,7 @@ export const getSendOpenaiMessageMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof sendOpenaiMessage>>,
-    { id: number; data: BodyType<SendOpenaiMessageBody> }
+    { id: string; data: BodyType<SendOpenaiMessageBody> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -2347,14 +2347,14 @@ export const useSendOpenaiMessage = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof sendOpenaiMessage>>,
     TError,
-    { id: number; data: BodyType<SendOpenaiMessageBody> },
+    { id: string; data: BodyType<SendOpenaiMessageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof sendOpenaiMessage>>,
   TError,
-  { id: number; data: BodyType<SendOpenaiMessageBody> },
+  { id: string; data: BodyType<SendOpenaiMessageBody> },
   TContext
 > => {
   return useMutation(getSendOpenaiMessageMutationOptions(options));

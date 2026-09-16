@@ -10,7 +10,7 @@ export interface HealthStatus {
 }
 
 export interface Transaction {
-  id: number;
+  id: string;
   merchant: string;
   category: string;
   amount: number;
@@ -33,7 +33,7 @@ export interface TransactionInput {
 }
 
 export interface SavingsGoal {
-  id: number;
+  id: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
@@ -55,7 +55,7 @@ export interface SavingsGoalUpdate {
 }
 
 export interface Investment {
-  id: number;
+  id: string;
   ticker: string;
   name: string;
   value: number;
@@ -99,21 +99,21 @@ export interface ExpenseCategory {
 }
 
 export interface OpenaiConversation {
-  id: number;
+  id: string;
   title: string;
   createdAt: string;
 }
 
 export interface OpenaiMessage {
-  id: number;
-  conversationId: number;
+  id: string;
+  conversationId: string;
   role: string;
   content: string;
   createdAt: string;
 }
 
 export interface OpenaiConversationWithMessages {
-  id: number;
+  id: string;
   title: string;
   createdAt: string;
   messages: OpenaiMessage[];
@@ -132,7 +132,7 @@ export interface OpenaiError {
 }
 
 export interface Budget {
-  id: number;
+  id: string;
   category: string;
   monthlyLimit: number;
   createdAt: string;
@@ -144,7 +144,7 @@ export interface BudgetInput {
 }
 
 export interface Bill {
-  id: number;
+  id: string;
   name: string;
   amount: number;
   dueDate: string;

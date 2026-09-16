@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "SAVEONY",
-    "slug": "saveony-mobile",
+    "slug": "saveony",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -40,6 +40,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": false
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9fc46c86-78e8-4970-9f53-7aff9453de49"
+      }
+    },
+    "owner": "drashtivaghela"
   }
 }

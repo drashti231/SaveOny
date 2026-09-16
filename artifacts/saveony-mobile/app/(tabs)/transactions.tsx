@@ -120,7 +120,7 @@ export default function TransactionsScreen() {
     });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     Alert.alert("Delete Transaction", "Are you sure?", [
       { text: "Cancel", style: "cancel" },
       {

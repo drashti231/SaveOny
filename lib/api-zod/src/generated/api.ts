@@ -18,7 +18,7 @@ export const HealthCheckResponse = zod.object({
  * @summary List all transactions
  */
 export const ListTransactionsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   merchant: zod.string(),
   category: zod.string(),
   amount: zod.number(),
@@ -46,14 +46,14 @@ export const CreateTransactionBody = zod.object({
  * @summary Delete a transaction
  */
 export const DeleteTransactionParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
  * @summary List all savings goals
  */
 export const ListSavingsGoalsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   name: zod.string(),
   targetAmount: zod.number(),
   currentAmount: zod.number(),
@@ -75,7 +75,7 @@ export const CreateSavingsGoalBody = zod.object({
  * @summary Update a savings goal (name, target, or current amount)
  */
 export const UpdateSavingsGoalParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const UpdateSavingsGoalBody = zod.object({
@@ -85,7 +85,7 @@ export const UpdateSavingsGoalBody = zod.object({
 });
 
 export const UpdateSavingsGoalResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   name: zod.string(),
   targetAmount: zod.number(),
   currentAmount: zod.number(),
@@ -96,14 +96,14 @@ export const UpdateSavingsGoalResponse = zod.object({
  * @summary Delete a savings goal
  */
 export const DeleteSavingsGoalParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
  * @summary List all investment holdings
  */
 export const ListInvestmentsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   ticker: zod.string(),
   name: zod.string(),
   value: zod.number(),
@@ -129,7 +129,7 @@ export const CreateInvestmentBody = zod.object({
  * @summary Update an investment holding value or change
  */
 export const UpdateInvestmentParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const UpdateInvestmentBody = zod.object({
@@ -141,7 +141,7 @@ export const UpdateInvestmentBody = zod.object({
 });
 
 export const UpdateInvestmentResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   ticker: zod.string(),
   name: zod.string(),
   value: zod.number(),
@@ -154,7 +154,7 @@ export const UpdateInvestmentResponse = zod.object({
  * @summary Delete an investment holding
  */
 export const DeleteInvestmentParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
@@ -186,7 +186,7 @@ export const GetExpenseBreakdownResponse = zod.array(
  * @summary List all budgets
  */
 export const ListBudgetsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   category: zod.string(),
   monthlyLimit: zod.number(),
   createdAt: zod.string(),
@@ -205,14 +205,14 @@ export const CreateBudgetBody = zod.object({
  * @summary Delete a budget
  */
 export const DeleteBudgetParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
  * @summary List all bills
  */
 export const ListBillsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   name: zod.string(),
   amount: zod.number(),
   dueDate: zod.string(),
@@ -234,7 +234,7 @@ export const CreateBillBody = zod.object({
  * @summary Update a bill (e.g., mark as paid)
  */
 export const UpdateBillParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const UpdateBillBody = zod.object({
@@ -242,7 +242,7 @@ export const UpdateBillBody = zod.object({
 });
 
 export const UpdateBillResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   name: zod.string(),
   amount: zod.number(),
   dueDate: zod.string(),
@@ -254,7 +254,7 @@ export const UpdateBillResponse = zod.object({
  * @summary Delete a bill
  */
 export const DeleteBillParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
@@ -277,7 +277,7 @@ export const GetReportsHistoryResponse = zod.array(
  * @summary List all AI advisor conversations
  */
 export const ListOpenaiConversationsResponseItem = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   title: zod.string(),
   createdAt: zod.coerce.date(),
 });
@@ -296,17 +296,17 @@ export const CreateOpenaiConversationBody = zod.object({
  * @summary Get conversation with messages
  */
 export const GetOpenaiConversationParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const GetOpenaiConversationResponse = zod.object({
-  id: zod.number(),
+  id: zod.string(),
   title: zod.string(),
   createdAt: zod.coerce.date(),
   messages: zod.array(
     zod.object({
-      id: zod.number(),
-      conversationId: zod.number(),
+      id: zod.string(),
+      conversationId: zod.string(),
       role: zod.string(),
       content: zod.string(),
       createdAt: zod.coerce.date(),
@@ -318,19 +318,19 @@ export const GetOpenaiConversationResponse = zod.object({
  * @summary Delete a conversation
  */
 export const DeleteOpenaiConversationParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 /**
  * @summary List messages in a conversation
  */
 export const ListOpenaiMessagesParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const ListOpenaiMessagesResponseItem = zod.object({
-  id: zod.number(),
-  conversationId: zod.number(),
+  id: zod.string(),
+  conversationId: zod.string(),
   role: zod.string(),
   content: zod.string(),
   createdAt: zod.coerce.date(),
@@ -343,7 +343,7 @@ export const ListOpenaiMessagesResponse = zod.array(
  * @summary Send a message and receive a streaming AI response
  */
 export const SendOpenaiMessageParams = zod.object({
-  id: zod.coerce.number(),
+  id: zod.coerce.string(),
 });
 
 export const SendOpenaiMessageBody = zod.object({

@@ -1,13 +1,13 @@
 import { Router, type IRouter } from "express";
-import { db, transactionsTable, savingsGoalsTable, investmentsTable } from "@workspace/db";
+import { TransactionModel, SavingsGoalModel, InvestmentModel } from "@workspace/db";
 
 const router: IRouter = Router();
 
 router.get("/dashboard/summary", async (_req, res): Promise<void> => {
   const [transactions, goals, investments] = await Promise.all([
-    db.select().from(transactionsTable),
-    db.select().from(savingsGoalsTable),
-    db.select().from(investmentsTable),
+    TransactionModel.find(),
+    SavingsGoalModel.find(),
+    InvestmentModel.find(),
   ]);
 
   const now = new Date();
@@ -21,30 +21,30 @@ router.get("/dashboard/summary", async (_req, res): Promise<void> => {
 
   const monthlyIncome = monthlyTxns
     .filter((t) => t.isIncome)
-    .reduce((s, t) => s + parseFloat(t.amount), 0);
+    .reduce((s, t) => s + (t.amount || 0), 0);
 
   const monthlyExpenses = monthlyTxns
     .filter((t) => !t.isIncome)
-    .reduce((s, t) => s + parseFloat(t.amount), 0);
+    .reduce((s, t) => s + (t.amount || 0), 0);
 
   const savingsRate = monthlyIncome > 0
     ? Math.round(((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100)
     : 0;
 
-  const portfolioValue = investments.reduce((s, i) => s + parseFloat(i.value), 0);
+  const portfolioValue = investments.reduce((s, i) => s + (i.value || 0), 0);
 
   // Simple YTD return: average of dayChangePercent as placeholder
   const portfolioReturnPercent =
     investments.length > 0
       ? parseFloat(
           (
-            investments.reduce((s, i) => s + parseFloat(i.dayChangePercent), 0) /
+            investments.reduce((s, i) => s + (i.dayChangePercent || 0), 0) /
             investments.length
           ).toFixed(2)
         )
       : 0;
 
-  const totalSaved = goals.reduce((s, g) => s + parseFloat(g.currentAmount), 0);
+  const totalSaved = goals.reduce((s, g) => s + (g.currentAmount || 0), 0);
 
   // Net worth = portfolio + savings
   const netWorth = portfolioValue + totalSaved;
@@ -65,7 +65,7 @@ router.get("/expenses/breakdown", async (_req, res): Promise<void> => {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  const transactions = await db.select().from(transactionsTable);
+  const transactions = await TransactionModel.find();
 
   const expenses = transactions.filter((t) => {
     if (t.isIncome) return false;
@@ -73,11 +73,11 @@ router.get("/expenses/breakdown", async (_req, res): Promise<void> => {
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  const totalExpenses = expenses.reduce((s, t) => s + parseFloat(t.amount), 0);
+  const totalExpenses = expenses.reduce((s, t) => s + (t.amount || 0), 0);
 
   const categoryMap: Record<string, number> = {};
   for (const t of expenses) {
-    categoryMap[t.category] = (categoryMap[t.category] ?? 0) + parseFloat(t.amount);
+    categoryMap[t.category] = (categoryMap[t.category] ?? 0) + (t.amount || 0);
   }
 
   const breakdown = Object.entries(categoryMap)

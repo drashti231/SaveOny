@@ -85,7 +85,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -137,7 +137,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       requestBody:
         required: true
         content:
@@ -162,7 +162,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -214,7 +214,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       requestBody:
         required: true
         content:
@@ -239,7 +239,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -318,7 +318,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -368,7 +368,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       requestBody:
         required: true
         content:
@@ -393,7 +393,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -466,7 +466,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "200":
           description: Conversation with messages
@@ -489,7 +489,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "204":
           description: Deleted
@@ -510,7 +510,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       responses:
         "200":
           description: List of messages
@@ -529,7 +529,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
+            type: string
       requestBody:
         required: true
         content:
@@ -557,7 +557,7 @@ components:
       required: [id, merchant, category, amount, date, isIncome, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         merchant:
           type: string
         category:
@@ -598,7 +598,7 @@ components:
       required: [id, name, targetAmount, currentAmount, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         targetAmount:
@@ -637,7 +637,7 @@ components:
       required: [id, ticker, name, value, allocationPercent, dayChangePercent, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         ticker:
           type: string
         name:
@@ -718,7 +718,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         title:
           type: string
         createdAt:
@@ -733,9 +733,9 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         conversationId:
-          type: integer
+          type: string
         role:
           type: string
         content:
@@ -754,7 +754,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         title:
           type: string
         createdAt:
@@ -800,7 +800,7 @@ components:
       required: [id, category, monthlyLimit, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         category:
           type: string
         monthlyLimit:
@@ -823,7 +823,7 @@ components:
       required: [id, name, amount, dueDate, isPaid, createdAt]
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         amount:

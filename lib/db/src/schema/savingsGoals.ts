@@ -1,18 +1,26 @@
-import { pgTable, serial, text, numeric, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import mongoose, { Document, Schema } from 'mongoose';
 
-export const savingsGoalsTable = pgTable("savings_goals", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  targetAmount: numeric("target_amount", { precision: 14, scale: 2 }).notNull(),
-  currentAmount: numeric("current_amount", { precision: 14, scale: 2 }).notNull().default("0"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+export interface ISavingsGoal extends Document {
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  createdAt: Date;
+}
+
+const savingsGoalSchema = new Schema<ISavingsGoal>({
+  name: { type: String, required: true },
+  targetAmount: { type: Number, required: true },
+  currentAmount: { type: Number, required: true, default: 0 },
+  createdAt: { type: Date, required: true, default: Date.now }
+}, {
+  timestamps: false,
+  toJSON: {
+    transform: function (doc, ret: any) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+    }
+  }
 });
 
-export const insertSavingsGoalSchema = createInsertSchema(savingsGoalsTable).omit({
-  id: true,
-  createdAt: true,
-});
-export type InsertSavingsGoal = z.infer<typeof insertSavingsGoalSchema>;
-export type SavingsGoal = typeof savingsGoalsTable.$inferSelect;
+export const SavingsGoalModel = mongoose.models.SavingsGoal || mongoose.model<ISavingsGoal>('SavingsGoal', savingsGoalSchema);

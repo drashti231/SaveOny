@@ -1,6 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, transactionsTable } from "@workspace/db";
+import { TransactionModel } from "@workspace/db";
 import {
   CreateTransactionBody,
   DeleteTransactionParams,
@@ -10,14 +9,16 @@ import {
 const router: IRouter = Router();
 
 router.get("/transactions", async (req, res): Promise<void> => {
-  const rows = await db
-    .select()
-    .from(transactionsTable)
-    .orderBy(transactionsTable.createdAt);
+  const rows = await TransactionModel.find().sort({ createdAt: 1 });
 
   const mapped = rows.map((r) => ({
-    ...r,
-    amount: parseFloat(r.amount),
+    id: r.id,
+    merchant: r.merchant,
+    category: r.category,
+    amount: r.amount,
+    date: r.date,
+    isIncome: r.isIncome,
+    notes: r.notes,
     createdAt: r.createdAt.toISOString(),
   }));
 
@@ -31,37 +32,37 @@ router.post("/transactions", async (req, res): Promise<void> => {
     return;
   }
 
-  const [row] = await db
-    .insert(transactionsTable)
-    .values({
-      merchant: parsed.data.merchant,
-      category: parsed.data.category,
-      amount: String(parsed.data.amount),
-      date: parsed.data.date,
-      isIncome: parsed.data.isIncome,
-      notes: parsed.data.notes ?? null,
-    })
-    .returning();
+  const row = await TransactionModel.create({
+    merchant: parsed.data.merchant,
+    category: parsed.data.category,
+    amount: parsed.data.amount,
+    date: parsed.data.date,
+    isIncome: parsed.data.isIncome,
+    notes: parsed.data.notes ?? null,
+  });
 
   res.status(201).json({
-    ...row,
-    amount: parseFloat(row.amount),
+    id: row.id,
+    merchant: row.merchant,
+    category: row.category,
+    amount: row.amount,
+    date: row.date,
+    isIncome: row.isIncome,
+    notes: row.notes,
     createdAt: row.createdAt.toISOString(),
   });
 });
 
 router.delete("/transactions/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = DeleteTransactionParams.safeParse({ id: parseInt(raw, 10) });
+  
+  const params = DeleteTransactionParams.safeParse({ id: raw });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
 
-  const [row] = await db
-    .delete(transactionsTable)
-    .where(eq(transactionsTable.id, params.data.id))
-    .returning();
+  const row = await TransactionModel.findByIdAndDelete(params.data.id);
 
   if (!row) {
     res.status(404).json({ error: "Transaction not found" });

@@ -48,7 +48,7 @@ export default function InvestmentsScreen() {
   const queryClient = useQueryClient();
 
   const [showModal, setShowModal] = useState(false);
-  const [editId, setEditId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<InvForm>(emptyForm());
   const [formError, setFormError] = useState("");
 
@@ -119,7 +119,7 @@ export default function InvestmentsScreen() {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     Alert.alert("Remove Holding", "Delete this investment?", [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: () => deleteMutation.mutate({ id }) },
@@ -147,7 +147,7 @@ export default function InvestmentsScreen() {
       ) : (
         <FlatList
           data={safeInvestments}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={{
             paddingHorizontal: 16,
             paddingTop: 12,

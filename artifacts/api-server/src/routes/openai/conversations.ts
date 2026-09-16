@@ -1,7 +1,5 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
-import { conversations, messages, transactionsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { ConversationModel, MessageModel, TransactionModel } from "@workspace/db";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import {
   CreateOpenaiConversationBody,
@@ -30,11 +28,12 @@ Tone: Professional yet friendly, concise, and actionable. Always use ₹ for amo
 // GET /openai/conversations — list all
 router.get("/openai/conversations", async (req, res) => {
   try {
-    const rows = await db
-      .select()
-      .from(conversations)
-      .orderBy(desc(conversations.createdAt));
-    res.json(rows.map((c) => ({ ...c, createdAt: c.createdAt.toISOString() })));
+    const rows = await ConversationModel.find().sort({ createdAt: -1 });
+    res.json(rows.map((c: any) => ({ 
+      id: c.id, 
+      title: c.title, 
+      createdAt: c.createdAt.toISOString() 
+    })));
   } catch (err) {
     req.log.error(err, "Failed to list conversations");
     res.status(500).json({ error: "Internal server error" });
@@ -49,11 +48,12 @@ router.post("/openai/conversations", async (req, res) => {
     return;
   }
   try {
-    const [row] = await db
-      .insert(conversations)
-      .values({ title: parsed.data.title })
-      .returning();
-    res.status(201).json({ ...row, createdAt: row.createdAt.toISOString() });
+    const row = await ConversationModel.create({ title: parsed.data.title });
+    res.status(201).json({ 
+      id: row.id, 
+      title: row.title, 
+      createdAt: row.createdAt.toISOString() 
+    });
   } catch (err) {
     req.log.error(err, "Failed to create conversation");
     res.status(500).json({ error: "Internal server error" });
@@ -68,25 +68,22 @@ router.get("/openai/conversations/:id", async (req, res) => {
     return;
   }
   try {
-    const [convo] = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, params.data.id));
+    const convo = await ConversationModel.findById(params.data.id);
     if (!convo) {
       res.status(404).json({ error: "Conversation not found" });
       return;
     }
-    const msgs = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, params.data.id))
-      .orderBy(messages.createdAt);
+    const msgs = await MessageModel.find({ conversationId: params.data.id }).sort({ createdAt: 1 });
 
     res.json({
-      ...convo,
+      id: convo.id,
+      title: convo.title,
       createdAt: convo.createdAt.toISOString(),
-      messages: msgs.map((m) => ({
-        ...m,
+      messages: msgs.map((m: any) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        role: m.role,
+        content: m.content,
         createdAt: m.createdAt.toISOString(),
       })),
     });
@@ -104,14 +101,12 @@ router.delete("/openai/conversations/:id", async (req, res) => {
     return;
   }
   try {
-    const deleted = await db
-      .delete(conversations)
-      .where(eq(conversations.id, params.data.id))
-      .returning();
-    if (!deleted.length) {
+    const deleted = await ConversationModel.findByIdAndDelete(params.data.id);
+    if (!deleted) {
       res.status(404).json({ error: "Conversation not found" });
       return;
     }
+    await MessageModel.deleteMany({ conversationId: params.data.id });
     res.status(204).send();
   } catch (err) {
     req.log.error(err, "Failed to delete conversation");
@@ -127,12 +122,14 @@ router.get("/openai/conversations/:id/messages", async (req, res) => {
     return;
   }
   try {
-    const msgs = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, params.data.id))
-      .orderBy(messages.createdAt);
-    res.json(msgs.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() })));
+    const msgs = await MessageModel.find({ conversationId: params.data.id }).sort({ createdAt: 1 });
+    res.json(msgs.map((m: any) => ({
+      id: m.id,
+      conversationId: m.conversationId,
+      role: m.role,
+      content: m.content,
+      createdAt: m.createdAt.toISOString(),
+    })));
   } catch (err) {
     req.log.error(err, "Failed to list messages");
     res.status(500).json({ error: "Internal server error" });
@@ -153,41 +150,31 @@ router.post("/openai/conversations/:id/messages", async (req, res) => {
 
   try {
     // Verify conversation exists
-    const [convo] = await db
-      .select()
-      .from(conversations)
-      .where(eq(conversations.id, conversationId));
+    const convo = await ConversationModel.findById(conversationId);
     if (!convo) {
       res.status(404).json({ error: "Conversation not found" });
       return;
     }
 
     // Save user message
-    await db.insert(messages).values({
+    await MessageModel.create({
       conversationId,
       role: "user",
       content: userContent,
     });
 
     // Load conversation history for context
-    const history = await db
-      .select()
-      .from(messages)
-      .where(eq(messages.conversationId, conversationId))
-      .orderBy(messages.createdAt);
+    const history = await MessageModel.find({ conversationId }).sort({ createdAt: 1 });
 
     // Fetch all transactions to give the AI context
-    const allTxns = await db
-      .select()
-      .from(transactionsTable)
-      .orderBy(desc(transactionsTable.date));
+    const allTxns = await TransactionModel.find().sort({ date: -1 });
       
     let totalIncome = 0;
     let totalExpense = 0;
     
     // Create a simplified list of transactions for the prompt
-    const txnsContext = allTxns.map(t => {
-      const amt = parseFloat(t.amount);
+    const txnsContext = allTxns.map((t: any) => {
+      const amt = t.amount || 0;
       if (t.isIncome) totalIncome += amt;
       else totalExpense += amt;
       return `${t.date}: ${t.merchant} (${t.category}) - ₹${amt} [${t.isIncome ? 'INCOME' : 'EXPENSE'}]`;
@@ -209,7 +196,7 @@ Use this exact data to provide personalized, highly specific advice. If they ask
 
     const chatMessages = [
       { role: "system" as const, content: dynamicSystemPrompt },
-      ...history.map((m) => ({
+      ...history.map((m: any) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
       })),
@@ -250,7 +237,7 @@ Use this exact data to provide personalized, highly specific advice. If they ask
     }
 
     // Persist assistant reply
-    await db.insert(messages).values({
+    await MessageModel.create({
       conversationId,
       role: "assistant",
       content: fullResponse,

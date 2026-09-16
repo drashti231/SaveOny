@@ -1,21 +1,13 @@
 import { Router, type IRouter } from "express";
-import { db, transactionsTable } from "@workspace/db";
-import { eq, sql } from "drizzle-orm";
+import { TransactionModel } from "@workspace/db";
 
 const router: IRouter = Router();
 
 router.get("/reports/history", async (req, res): Promise<void> => {
-  const userId = (req as any).auth?.userId || "mock_user_id";
   const period = req.query.period as string || "weekly"; // weekly, monthly, yearly
 
   // We group transactions by date to build the report
-  const rows = await db
-    .select({
-      date: transactionsTable.date,
-      isIncome: transactionsTable.isIncome,
-      amount: transactionsTable.amount,
-    })
-    .from(transactionsTable);
+  const rows = await TransactionModel.find().select("date isIncome amount");
 
   // Aggregate by date
   const agg: Record<string, { income: number; expense: number }> = {};
@@ -25,7 +17,7 @@ router.get("/reports/history", async (req, res): Promise<void> => {
     if (!agg[d]) {
       agg[d] = { income: 0, expense: 0 };
     }
-    const amt = parseFloat(r.amount);
+    const amt = r.amount || 0;
     if (r.isIncome) {
       agg[d].income += amt;
     } else {

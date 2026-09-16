@@ -1,20 +1,30 @@
-import { pgTable, serial, text, numeric, timestamp } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import mongoose, { Document, Schema } from 'mongoose';
 
-export const investmentsTable = pgTable("investments", {
-  id: serial("id").primaryKey(),
-  ticker: text("ticker").notNull(),
-  name: text("name").notNull(),
-  value: numeric("value", { precision: 14, scale: 2 }).notNull(),
-  allocationPercent: numeric("allocation_percent", { precision: 6, scale: 2 }).notNull(),
-  dayChangePercent: numeric("day_change_percent", { precision: 6, scale: 2 }).notNull().default("0"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+export interface IInvestment extends Document {
+  ticker: string;
+  name: string;
+  value: number;
+  allocationPercent: number;
+  dayChangePercent: number;
+  createdAt: Date;
+}
+
+const investmentSchema = new Schema<IInvestment>({
+  ticker: { type: String, required: true },
+  name: { type: String, required: true },
+  value: { type: Number, required: true },
+  allocationPercent: { type: Number, required: true },
+  dayChangePercent: { type: Number, required: true, default: 0 },
+  createdAt: { type: Date, required: true, default: Date.now }
+}, {
+  timestamps: false,
+  toJSON: {
+    transform: function (doc, ret: any) {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+    }
+  }
 });
 
-export const insertInvestmentSchema = createInsertSchema(investmentsTable).omit({
-  id: true,
-  createdAt: true,
-});
-export type InsertInvestment = z.infer<typeof insertInvestmentSchema>;
-export type Investment = typeof investmentsTable.$inferSelect;
+export const InvestmentModel = mongoose.models.Investment || mongoose.model<IInvestment>('Investment', investmentSchema);
